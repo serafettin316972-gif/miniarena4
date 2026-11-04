@@ -1,0 +1,14 @@
+{
+  "name": "mini-arena-4-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "4 oyunculu, davet kodlu tarayıcı mini oyun koleksiyonu",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

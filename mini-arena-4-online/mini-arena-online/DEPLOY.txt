@@ -1,0 +1,27 @@
+MINI ARENA 4 ONLINE — YAYINA ALMA
+=================================
+
+Bu sürümde arkadaşların bir web adresi açıp oda kodu girer.
+Arkadaşlarının bilgisayarına program kurulmaz.
+
+YAYINA ALMAK İÇİN:
+1) ZIP içeriğini bir klasöre çıkart.
+2) Dosyaları GitHub'da yeni bir depoya (repository) yükle.
+3) render.com adresinde hesap aç / giriş yap.
+4) Render Dashboard > New > Blueprint yolunu aç.
+5) GitHub deposunu bağla; render.yaml dosyasını seç.
+6) Free planı seçip Deploy et.
+7) Yayın bitince Render'ın verdiği https://....onrender.com adresini arkadaşlarına gönder.
+
+OYUN:
+- Sen siteyi açıp oyuncu adını yaz ve ODA OLUŞTUR'a bas.
+- Ekrandaki 6 haneli oda kodunu arkadaşlarına gönder.
+- Arkadaşların aynı siteyi açıp adlarını ve kodu girsin.
+- Oda 4 kişiye ulaşınca başlayabilir.
+
+ÖNEMLİ:
+- Bu pakette LAN, Cloudflare, CMD/baslat.bat gerekmiyor.
+- Node.js yalnızca Render sunucusunda çalışır; oyuncuların bilgisayarlarına gerekmez.
+- Bu sürüm bir anda tek bir oda barındırır.
+- Render Free servisleri 15 dakika boşta kalırsa uyur; ilk ziyaret yaklaşık 1 dakika gecikebilir. Ücretsiz servis yeniden başlarsa açık oyun odası kaybolur.
+- Okul ağı Render alan adını filtreleyebilir; bu paketin engeli kaldırma garantisi yoktur.
