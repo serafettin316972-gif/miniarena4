@@ -15,12 +15,14 @@ let ROOM_CODE = null;
 function makeRoomCode() { return Array.from({ length: 6 }, () => CODE_ALPHABET[crypto.randomInt(CODE_ALPHABET.length)]).join(''); }
 const COLORS = ['#42e8d5', '#ffbd4a', '#a98bff', '#ff6c91'];
 const MODES = {
-  tank: { title: 'Tank Savaşı', short: 'TANK', description: 'Tankını sür, nişan al ve rakiplerini vur.', duration: 90, target: 10, action: 'ATEŞ ET', key: 'SPACE', accent: '#ffbd4a' },
-  sumo: { title: 'Sumo Güreş', short: 'GÜREŞ', description: 'Rakiplerini arenanın dışına it. Son anda güç hamleni kullan!', duration: 75, target: 5, action: 'GÜÇLÜ İTİŞ', key: 'SPACE', accent: '#ff6c91' },
-  push: { title: 'İtişme Arenası', short: 'İTİŞME', description: 'Merkez platformunu ele geçir, rakiplerini uzak tut.', duration: 60, target: 30, action: 'ŞOK DALGASI', key: 'SPACE', accent: '#42e8d5' },
-  soccer: { title: 'Top Kapmaca', short: 'TOP', description: 'Topa yaklaş, yönünü belirle ve rakibinin kalesine gönder.', duration: 90, target: 5, action: 'ŞUT ÇEK', key: 'SPACE', accent: '#76b8ff' },
-  gems: { title: 'Elmas Avı', short: 'ELMAS', description: 'Haritada beliren elmasları kap. En hızlı toplayan kazanır.', duration: 75, target: 15, action: 'DEPAR', key: 'SPACE', accent: '#b18cff' },
-  survival: { title: 'Hayatta Kal', short: 'HAYATTA KAL', description: 'Üzerine gelen enerji toplarından kaç. Hayatta kaldıkça puan kazan.', duration: 75, target: 999, action: 'KAÇIŞ', key: 'SPACE', accent: '#ff875e' },
+  tank: { title: 'Tank Savaşı', short: 'TANK', description: 'Tankını sür, siperleri kullan ve rakiplerini vur.', duration: 90, target: 15, action: 'ATEŞ ET', key: 'SPACE', accent: '#ffbd4a' },
+  sumo: { title: 'Sumo Güreş', short: 'GÜREŞ', description: 'Daralan ringde rakiplerini dışarı gönder. İki hakkın var!', duration: 75, target: 8, action: 'GÜÇLÜ İTİŞ', key: 'SPACE', accent: '#ff6c91' },
+  push: { title: 'İtişme Arenası', short: 'İTİŞME', description: 'Küçülen merkez alanını ele geçir, rakiplerini şok dalgasıyla savur.', duration: 60, target: 45, action: 'ŞOK DALGASI', key: 'SPACE', accent: '#42e8d5' },
+  soccer: { title: 'Top Kapmaca', short: 'TOP', description: 'Dört küçük kaleden birine daha isabetli şutlar gönder.', duration: 90, target: 8, action: 'ŞUT ÇEK', key: 'SPACE', accent: '#76b8ff' },
+  gems: { title: 'Elmas Avı', short: 'ELMAS', description: 'Daha az çıkan elmasları kap. Altın elmaslar 3 puan!', duration: 75, target: 23, action: 'DEPAR', key: 'SPACE', accent: '#b18cff' },
+  survival: { title: 'Meteor Yağmuru', short: 'HAYATTA KAL', description: 'Meteor dalgalarından kaç, avcı meteordan sıyrıl ve can kristallerini topla.', duration: 90, target: 999, action: 'KALKAN DEPARI', key: 'SPACE', accent: '#ff875e' },
+  hotpotato: { title: 'Bomba Pasla', short: 'BOMBA', description: 'Bomba sende patlamadan SPACE ile yakındaki rakibe pasla. Patlayan oyuncu can kaybeder!', duration: 75, target: 6, action: 'BOMBA PASLA', key: 'SPACE', accent: '#ff5b62' },
+  floor: { title: 'Çöken Zemin', short: 'ZEMİN', description: 'Üzerinde durduğun karo çatlayıp çöker. Sürekli hareket et, boşluğa düşme!', duration: 80, target: 15, action: 'ZIPLA', key: 'SPACE', accent: '#70d6ff' },
 };
 const MODE_IDS = Object.keys(MODES);
 
@@ -38,6 +40,17 @@ let hazards = [];
 let ball = null;
 let lastTick = Date.now();
 let lastSurvivalPoint = 0;
+let survivalLoot = [];
+let survivalNextHazardAt = 0;
+let survivalNextLootAt = 0;
+let survivalStartedAt = 0;
+let survivalHunterSpawned = false;
+let survivalWave = 1;
+let bombHolderId = null;
+let bombExplodesAt = 0;
+const FLOOR_COLS = 12, FLOOR_ROWS = 8;
+let floorTiles = [];
+let floorScoreAt = 0;
 
 function random(min, max) { return min + Math.random() * (max - min); }
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
@@ -47,9 +60,29 @@ function cleanName(value) {
 function makeGem() {
   return { id: crypto.randomUUID(), x: random(70, WORLD.width - 70), y: random(70, WORLD.height - 70), kind: Math.random() < .16 ? 'bonus' : 'normal', pulse: random(0, Math.PI * 2) };
 }
-function makeHazard() {
-  const angle = random(0, Math.PI * 2), speed = random(65, 125);
-  return { id: crypto.randomUUID(), x: random(60, WORLD.width - 60), y: random(60, WORLD.height - 60), vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: random(15, 23), phase: random(0, Math.PI * 2) };
+function makeHazard(hunter = false, multiplier = 1) {
+  const angle = random(0, Math.PI * 2), speed = (hunter ? random(118, 145) : random(98, 188)) * multiplier;
+  return { id: crypto.randomUUID(), x: random(70, WORLD.width - 70), y: random(70, WORLD.height - 70), vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: hunter ? 29 : random(16, 24), phase: random(0, Math.PI * 2), hunter };
+}
+function makeSurvivalLoot() {
+  return { id: crypto.randomUUID(), x: random(80, WORLD.width - 80), y: random(80, WORLD.height - 80) };
+}
+function makeFloor() {
+  floorTiles = [];
+  for (let row = 0; row < FLOOR_ROWS; row++) for (let col = 0; col < FLOOR_COLS; col++) {
+    floorTiles.push({ col, row, alive: true, crackAt: 0 });
+  }
+}
+function floorIndexAt(x, y) {
+  const col = clamp(Math.floor(x / (WORLD.width / FLOOR_COLS)), 0, FLOOR_COLS - 1);
+  const row = clamp(Math.floor(y / (WORLD.height / FLOOR_ROWS)), 0, FLOOR_ROWS - 1);
+  return row * FLOOR_COLS + col;
+}
+function randomSafeFloorSpot() {
+  const safe = floorTiles.filter(tile => tile.alive);
+  if (!safe.length) return null;
+  const tile = safe[Math.floor(Math.random() * safe.length)];
+  return { x: (tile.col + .5) * (WORLD.width / FLOOR_COLS), y: (tile.row + .5) * (WORLD.height / FLOOR_ROWS) };
 }
 function spawnFor(slot) {
   const points = [
@@ -83,16 +116,36 @@ function resetWorld() {
   bullets = [];
   gems = [];
   hazards = [];
+  survivalLoot = [];
+  floorTiles = [];
   ball = null;
-  for (const p of players.values()) resetPlayer(p);
-  if (modeId === 'gems') for (let i = 0; i < 18; i++) gems.push(makeGem());
-  if (modeId === 'survival') for (let i = 0; i < 8; i++) hazards.push(makeHazard());
+  bombHolderId = null;
+  bombExplodesAt = 0;
+  const now = Date.now();
+  for (const p of players.values()) {
+    resetPlayer(p);
+    if (modeId === 'tank') p.hp = 2;
+    if (['sumo', 'survival', 'hotpotato', 'floor'].includes(modeId)) p.lives = 2;
+  }
+  if (modeId === 'gems') for (let i = 0; i < 14; i++) gems.push(makeGem());
+  if (modeId === 'survival') {
+    for (let i = 0; i < 12; i++) hazards.push(makeHazard(false, 1));
+    survivalStartedAt = now; survivalNextHazardAt = now + 5200; survivalNextLootAt = now + 4200;
+    survivalHunterSpawned = false; survivalWave = 1;
+  }
   if (modeId === 'soccer') ball = { x: WORLD.width / 2, y: WORLD.height / 2, vx: 0, vy: 0, lastKickBy: null, spin: 0 };
-  lastSurvivalPoint = Date.now();
+  if (modeId === 'hotpotato') {
+    const alive = [...players.values()].filter(p => p.alive);
+    bombHolderId = alive[Math.floor(Math.random() * alive.length)]?.id || null;
+    bombExplodesAt = now + 7200;
+  }
+  if (modeId === 'floor') { makeFloor(); floorScoreAt = now + 1800; }
+  lastSurvivalPoint = now;
 }
 function changePhaseToLobby() {
   phase = 'lobby'; roundEndsAt = null; countdownEndsAt = null; resultText = '';
-  bullets = []; gems = []; hazards = []; ball = null;
+  bullets = []; gems = []; hazards = []; survivalLoot = []; floorTiles = []; ball = null;
+  bombHolderId = null; bombExplodesAt = 0;
   for (const p of players.values()) resetPlayer(p);
 }
 function beginCountdown() {
@@ -114,6 +167,7 @@ function finishRound(reason) {
     resultText = tied.length > 1 ? `Berabere! ${top.score} puan` : `${top.name} kazandı! ${top.score} puan`;
   }
   if (reason === 'target') resultText += ' · Hedefe ilk ulaşan!';
+  if (reason === 'last') resultText += ' · Son kalan kazandı!';
   phase = 'finished'; roundEndsAt = null; countdownEndsAt = null;
 }
 function checkTarget() {
@@ -187,8 +241,8 @@ function tickTank(dt, now) {
   for (const p of players.values()) {
     movePlayer(p, dt, 205, 12); keepInBounds(p);
     if (actionReady(p, now)) {
-      p.actionReadyAt = now + 520;
-      const speed = 520;
+      p.actionReadyAt = now + 570;
+      const speed = 570;
       bullets.push({ id: crypto.randomUUID(), owner: p.id, x: p.x + Math.cos(p.angle) * 29, y: p.y + Math.sin(p.angle) * 29, vx: Math.cos(p.angle) * speed, vy: Math.sin(p.angle) * speed, life: 1.45, r: 7 });
     }
   }
@@ -201,7 +255,7 @@ function tickTank(dt, now) {
         p.hp--; p.vx += b.vx * .16; p.vy += b.vy * .16; p.lastHitBy = b.owner;
         if (p.hp <= 0) {
           const attacker = players.get(b.owner); if (attacker) { attacker.score++; attacker.kos++; }
-          p.deaths++; p.hp = 3; p.x = spawnFor(p.slot).x; p.y = spawnFor(p.slot).y; p.vx = 0; p.vy = 0; p.invulnerableUntil = now + 2200;
+          p.deaths++; p.hp = 2; p.x = spawnFor(p.slot).x; p.y = spawnFor(p.slot).y; p.vx = 0; p.vy = 0; p.invulnerableUntil = now + 2200;
         }
         bullets.splice(i, 1); break;
       }
@@ -215,7 +269,7 @@ function tickSumo(dt, now) {
     if (actionReady(p, now)) { p.actionReadyAt = now + 1850; p.powerUntil = now + 380; }
   }
   collidePlayers(1.25);
-  const cx = WORLD.width / 2, cy = WORLD.height / 2, radius = 251;
+  const cx = WORLD.width / 2, cy = WORLD.height / 2, radius = 236;
   for (const p of players.values()) {
     if (!p.alive) continue;
     const d = Math.hypot(p.x - cx, p.y - cy);
@@ -240,7 +294,7 @@ function tickPush(dt, now) {
     }
   }
   collidePlayers(.95);
-  const cx = WORLD.width / 2, cy = WORLD.height / 2, r = 112;
+  const cx = WORLD.width / 2, cy = WORLD.height / 2, r = 94;
   for (const p of players.values()) if (p.alive && Math.hypot(p.x - cx, p.y - cy) < r) p.controlMs += dt * 1000;
   for (const p of players.values()) {
     const points = Math.floor(p.controlMs / 1000);
@@ -263,7 +317,7 @@ function tickSoccer(dt, now) {
   collidePlayers(.55);
   ball.x += ball.vx * dt; ball.y += ball.vy * dt;
   const damp = Math.pow(.32, dt); ball.vx *= damp; ball.vy *= damp; ball.spin += dt * 5;
-  const goalHalf = 88;
+  const goalHalf = 70;
   let scoring = null, conceded = null;
   // Four goals; shooting into someone else's goal gives the last kicker a point.
   if (ball.x < 15 && Math.abs(ball.y - WORLD.height / 2) < goalHalf) { conceded = 0; scoring = ball.lastKickBy; }
@@ -283,7 +337,7 @@ function tickGems(dt, now) {
   for (const p of players.values()) {
     const dash = p.powerUntil > now;
     movePlayer(p, dt, dash ? 350 : 205, 12); keepInBounds(p);
-    if (actionReady(p, now)) { p.actionReadyAt = now + 1550; p.powerUntil = now + 360; }
+    if (actionReady(p, now)) { p.actionReadyAt = now + 1750; p.powerUntil = now + 330; }
   }
   for (let i = gems.length - 1; i >= 0; i--) {
     const g = gems[i];
@@ -297,30 +351,130 @@ function tickGems(dt, now) {
   }
 }
 function tickSurvival(dt, now) {
+  survivalWave = 1 + Math.floor((now - survivalStartedAt) / 15000);
   for (const p of players.values()) {
     if (!p.alive) continue;
-    movePlayer(p, dt, p.powerUntil > now ? 345 : 210, 12); keepInBounds(p);
-    if (actionReady(p, now)) { p.actionReadyAt = now + 1700; p.powerUntil = now + 420; }
+    movePlayer(p, dt, p.powerUntil > now ? 370 : 220, 13); keepInBounds(p);
+    if (actionReady(p, now)) {
+      p.actionReadyAt = now + 1850; p.powerUntil = now + 430;
+      // The dash itself grants brief protection in tickSurvival without freezing movement.
+    }
+  }
+  if (now >= survivalNextHazardAt && hazards.length < 18) {
+    const multiplier = 1 + Math.min(.35, (survivalWave - 1) * .06);
+    hazards.push(makeHazard(false, multiplier));
+    survivalNextHazardAt = now + Math.max(3400, 5600 - survivalWave * 180);
+  }
+  if (!survivalHunterSpawned && now - survivalStartedAt >= 20000) {
+    hazards.push(makeHazard(true, 1)); survivalHunterSpawned = true;
   }
   for (const h of hazards) {
+    if (h.hunter) {
+      let target = null, best = Infinity;
+      for (const p of players.values()) if (p.alive) {
+        const d2 = (p.x - h.x) ** 2 + (p.y - h.y) ** 2;
+        if (d2 < best) { best = d2; target = p; }
+      }
+      if (target) {
+        const dx = target.x - h.x, dy = target.y - h.y, d = Math.hypot(dx, dy) || 1, speed = 138 + Math.min(35, survivalWave * 3);
+        h.vx += (dx / d * speed - h.vx) * Math.min(1, dt * 1.8);
+        h.vy += (dy / d * speed - h.vy) * Math.min(1, dt * 1.8);
+      }
+    }
     h.x += h.vx * dt; h.y += h.vy * dt; h.phase += dt * 4;
     if (h.x < h.r || h.x > WORLD.width - h.r) h.vx *= -1;
     if (h.y < h.r || h.y > WORLD.height - h.r) h.vy *= -1;
     h.x = clamp(h.x, h.r, WORLD.width - h.r); h.y = clamp(h.y, h.r, WORLD.height - h.r);
     for (const p of players.values()) {
-      if (!p.alive || now < p.invulnerableUntil) continue;
+      if (!p.alive || now < p.invulnerableUntil || p.powerUntil > now) continue;
       if (Math.hypot(p.x - h.x, p.y - h.y) < h.r + 17) {
-        p.lives--; p.deaths++; p.invulnerableUntil = now + 1700;
+        p.lives--; p.deaths++; p.invulnerableUntil = now + 1450;
         p.vx += (p.x - h.x) * 4; p.vy += (p.y - h.y) * 4;
         if (p.lives <= 0) p.alive = false;
-        else { const s = spawnFor(p.slot); p.x = s.x; p.y = s.y; }
+        else { const s = spawnFor(p.slot); p.x = s.x; p.y = s.y; p.vx = 0; p.vy = 0; }
       }
+    }
+  }
+  if (now >= survivalNextLootAt && survivalLoot.length < 2) {
+    survivalLoot.push(makeSurvivalLoot()); survivalNextLootAt = now + 8500;
+  }
+  for (let i = survivalLoot.length - 1; i >= 0; i--) {
+    const loot = survivalLoot[i];
+    for (const p of players.values()) if (p.alive && Math.hypot(p.x - loot.x, p.y - loot.y) < 31) {
+      p.score += 4; p.lives = Math.min(2, p.lives + 1); survivalLoot.splice(i, 1); break;
     }
   }
   if (now - lastSurvivalPoint >= 1000) {
     lastSurvivalPoint = now;
     for (const p of players.values()) if (p.alive) p.score++;
   }
+}
+function tickHotPotato(dt, now) {
+  for (const p of players.values()) {
+    if (!p.alive) continue;
+    movePlayer(p, dt, p.powerUntil > now ? 300 : 220, 12); keepInBounds(p);
+    if (actionReady(p, now)) {
+      p.actionReadyAt = now + 720;
+      if (p.id === bombHolderId) {
+        let nearest = null, nearestDistance = 145;
+        for (const other of players.values()) if (other.alive && other.id !== p.id) {
+          const d = Math.hypot(other.x - p.x, other.y - p.y);
+          if (d < nearestDistance) { nearestDistance = d; nearest = other; }
+        }
+        if (nearest) { bombHolderId = nearest.id; p.score++; p.powerUntil = now + 180; }
+        else { p.powerUntil = now + 280; p.vx += Math.cos(p.angle) * 150; p.vy += Math.sin(p.angle) * 150; }
+      } else { p.powerUntil = now + 220; }
+    }
+  }
+  let holder = players.get(bombHolderId);
+  if (!holder || !holder.alive) {
+    const alive = [...players.values()].filter(p => p.alive);
+    bombHolderId = alive.length ? alive[Math.floor(Math.random() * alive.length)].id : null;
+    bombExplodesAt = now + 6200;
+  }
+  if (bombHolderId && now >= bombExplodesAt) {
+    const victim = players.get(bombHolderId);
+    if (victim && victim.alive) {
+      victim.lives--; victim.deaths++; victim.invulnerableUntil = now + 1300;
+      if (victim.lives <= 0) victim.alive = false;
+      else { const s = spawnFor(victim.slot); victim.x = s.x; victim.y = s.y; victim.vx = 0; victim.vy = 0; }
+      for (const p of players.values()) if (p.alive && p.id !== victim.id) p.score++;
+    }
+    const alive = [...players.values()].filter(p => p.alive);
+    bombHolderId = alive.length ? alive[Math.floor(Math.random() * alive.length)].id : null;
+    bombExplodesAt = now + random(5300, 7200);
+  }
+}
+function loseFloorLife(p, now) {
+  p.lives--; p.deaths++; p.invulnerableUntil = now + 850;
+  if (p.lives <= 0) { p.alive = false; return; }
+  const spot = randomSafeFloorSpot();
+  if (!spot) { p.alive = false; p.lives = 0; return; }
+  p.x = spot.x; p.y = spot.y; p.vx = 0; p.vy = 0;
+  const tile = floorTiles[floorIndexAt(p.x, p.y)];
+  if (tile) tile.crackAt = 0;
+}
+function tickFloor(dt, now) {
+  for (const p of players.values()) {
+    if (!p.alive) continue;
+    movePlayer(p, dt, p.powerUntil > now ? 360 : 235, 13); keepInBounds(p, 12);
+    if (actionReady(p, now)) { p.actionReadyAt = now + 1450; p.powerUntil = now + 260; }
+    const tile = floorTiles[floorIndexAt(p.x, p.y)];
+    if (!tile || !tile.alive) { loseFloorLife(p, now); continue; }
+    if (!tile.crackAt) tile.crackAt = now + 680;
+  }
+  for (const tile of floorTiles) if (tile.alive && tile.crackAt && now >= tile.crackAt) {
+    tile.alive = false;
+    for (const p of players.values()) if (p.alive && floorIndexAt(p.x, p.y) === tile.row * FLOOR_COLS + tile.col) loseFloorLife(p, now);
+  }
+  if (now >= floorScoreAt) {
+    floorScoreAt = now + 1800;
+    for (const p of players.values()) if (p.alive) p.score++;
+  }
+}
+function finishIfLastAlive() {
+  const alive = [...players.values()].filter(p => p.alive);
+  if (alive.length <= 1 && players.size >= 2) finishRound('last');
 }
 function tick() {
   const now = Date.now();
@@ -346,6 +500,10 @@ function tick() {
   else if (modeId === 'soccer') tickSoccer(dt, now);
   else if (modeId === 'gems') tickGems(dt, now);
   else if (modeId === 'survival') tickSurvival(dt, now);
+  else if (modeId === 'hotpotato') tickHotPotato(dt, now);
+  else if (modeId === 'floor') tickFloor(dt, now);
+  if (phase !== 'running') return;
+  if (['survival', 'hotpotato', 'floor'].includes(modeId)) finishIfLastAlive();
   if (phase !== 'running') return;
   checkTarget();
   if (phase === 'running' && now >= roundEndsAt) finishRound('time');
@@ -363,7 +521,12 @@ function publicState(req) {
     players: [...players.values()].map(p => ({ id: p.id, name: p.name, color: p.color, slot: p.slot, x: p.x, y: p.y, angle: p.angle, vx: p.vx, vy: p.vy, score: p.score, hp: p.hp, lives: p.lives, alive: p.alive, power: p.powerUntil > now, controlMs: p.controlMs, isHost: p.id === hostId, invulnerable: p.invulnerableUntil > now })),
     bullets: bullets.map(b => ({ x: b.x, y: b.y, r: b.r })),
     gems: gems.map(g => ({ x: g.x, y: g.y, kind: g.kind, pulse: g.pulse })),
-    hazards: hazards.map(h => ({ x: h.x, y: h.y, r: h.r, phase: h.phase })),
+    hazards: hazards.map(h => ({ x: h.x, y: h.y, r: h.r, phase: h.phase, hunter: Boolean(h.hunter) })),
+    survivalLoot: survivalLoot.map(o => ({ x: o.x, y: o.y })),
+    survivalWave,
+    bombHolderId: modeId === 'hotpotato' ? bombHolderId : null,
+    bombTimeLeft: modeId === 'hotpotato' ? Math.max(0, bombExplodesAt - now) : 0,
+    floorTiles: modeId === 'floor' ? floorTiles.map(t => ({ col: t.col, row: t.row, alive: t.alive, crackIn: t.crackAt ? Math.max(0, t.crackAt - now) : 0 })) : [],
     ball: ball ? { x: ball.x, y: ball.y, vx: ball.vx, vy: ball.vy, spin: ball.spin } : null,
   };
 }
