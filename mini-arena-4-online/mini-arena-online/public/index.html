@@ -80,7 +80,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const canvas = $('arena'), ctx = canvas.getContext('2d');
+  const canvas = $('arena'), ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
   const W = canvas.width, H = canvas.height;
   const MODE_UI = {
     tank:{icon:'▣',action:'ATEŞ ET',instruction:'WASD ile tankını sür. SPACE ile baktığın yöne mermi ateşle. Rakiplerini 10 kez vur!',sub:'TANKINI SÜR · RAKİPLERİNİ VUR',accent:'#ffbd4a'},
@@ -90,8 +90,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     gems:{icon:'✧',action:'DEPAR',instruction:'Haritadaki mor elmasları topla. Büyük altın elmaslar 3 puan kazandırır. SPACE ile depar at.',sub:'ELMASLARI TOPLA',accent:'#a98bff'},
     survival:{icon:'☄',action:'KAÇIŞ',instruction:'Hareketli enerji toplarına dokunma. 3 canın var. Her hayatta kaldığın saniye puan kazandırır. SPACE ile kaçış!',sub:'ENERJİ TOPLARINDAN KAÇ',accent:'#ff875e'}
   };
-  let state = null, token = null, input = {x:0,y:0,action:false}, keys = new Set();
-  let pollBusy = false, inputBusy = false, lastStateAt = 0, toastTimer = null;
+  let state = null, previousState = null, renderState = null, token = null, input = {x:0,y:0,action:false}, keys = new Set();
+  let pollBusy = false, inputBusy = false, lastStateAt = 0, lastPollRequestAt = 0, lastFrameRequestAt = 0, lastRenderAt = 0, rosterSignature = '', cachedMode = null, toastTimer = null;
+  const SNAPSHOT_MS = 100, FRAME_MS = 1000 / 30;
+  let snapshotDuration = SNAPSHOT_MS;
+  const staticCanvas = document.createElement('canvas'); staticCanvas.width = W; staticCanvas.height = H;
+  const staticCtx = staticCanvas.getContext('2d', { alpha: false });
   let mobileDirections = new Set(), mobileAction = false;
   const codeFromUrl = new URLSearchParams(location.search).get('kod');
   if (codeFromUrl) $('codeInput').value = codeFromUrl.toUpperCase().slice(0,6);
@@ -106,6 +110,26 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   }
   function showToast(message) { $('toast').textContent = message; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2200); }
   function setError(message) { $('joinError').textContent = message || ''; }
+  function acceptState(next) {
+    const receivedAt = Date.now();
+    previousState = state && state.mode === next.mode ? state : next;
+    if (lastStateAt) snapshotDuration = Math.max(70, Math.min(250, receivedAt - lastStateAt));
+    state = next; lastStateAt = receivedAt; updateUI();
+  }
+  function makeRenderState(now) {
+    if (!state) return null;
+    if (!previousState || previousState.mode !== state.mode) return state;
+    const t = Math.max(0, Math.min(1, (now - lastStateAt) / snapshotDuration));
+    const oldPlayers = new Map((previousState.players || []).map(p => [p.id, p]));
+    const players = (state.players || []).map(p => {
+      const old = oldPlayers.get(p.id);
+      return old ? { ...p, x: old.x + (p.x-old.x)*t, y: old.y + (p.y-old.y)*t } : p;
+    });
+    let ball = state.ball;
+    if (ball && previousState.ball) ball = { ...ball, x: previousState.ball.x + (ball.x-previousState.ball.x)*t, y: previousState.ball.y + (ball.y-previousState.ball.y)*t };
+    const hazards = (state.hazards || []).map((h,i) => { const old=previousState.hazards?.[i]; return old ? { ...h, x: old.x+(h.x-old.x)*t, y: old.y+(h.y-old.y)*t } : h; });
+    return { ...state, players, ball, hazards };
+  }
   $('copyCode').addEventListener('click', async () => {
     const c = state?.roomCode || $('roomCode').textContent;
     try { await navigator.clipboard.writeText(c); showToast('Davet kodu kopyalandı: ' + c); }
@@ -159,16 +183,22 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     catch { token = null; sessionStorage.removeItem('miniArenaToken'); }
   }
   async function pollState() {
-    if (pollBusy) return; pollBusy = true;
+    if (pollBusy) return;
+    const now = Date.now(); if (!token && now - lastPollRequestAt < 1500) return;
+    lastPollRequestAt = now; pollBusy = true;
     try {
       const s = await api('/api/state');
       if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('joinOverlay').classList.remove('hidden'); $('leaveButton').classList.add('hidden'); }
-      state = s; lastStateAt = Date.now(); updateUI();
+      acceptState(s);
     } catch(e) { $('connectionText').textContent = 'Sunucu bağlantısı yok'; $('phaseLabel').textContent = 'BAĞLANTI KESİLDİ'; }
     finally { pollBusy = false; }
   }
   async function sendInput() {
-    if (!token || inputBusy) return;
+    if (!token || inputBusy || document.hidden) return;
+    const now = Date.now();
+    const requestGap = state?.phase === 'running' ? 100 : 500;
+    if (now - lastFrameRequestAt < requestGap) return;
+    lastFrameRequestAt = now;
     const x = (keys.has('KeyD') || keys.has('ArrowRight') || mobileDirections.has('right') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') || mobileDirections.has('left') ? 1 : 0);
     const y = (keys.has('KeyS') || keys.has('ArrowDown') || mobileDirections.has('down') ? 1 : 0) - (keys.has('KeyW') || keys.has('ArrowUp') || mobileDirections.has('up') ? 1 : 0);
     const action = keys.has('Space') || mobileAction;
@@ -176,7 +206,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     try {
       const s = await api('/api/frame', input);
       if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('joinOverlay').classList.remove('hidden'); $('leaveButton').classList.add('hidden'); }
-      state = s; lastStateAt = Date.now(); updateUI();
+      acceptState(s);
     } catch { /* the slower state poll reports connection status */ }
     finally { inputBusy = false; }
   }
@@ -188,6 +218,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   }, {passive:false});
   window.addEventListener('keyup', ev => keys.delete(ev.code));
   window.addEventListener('blur', () => { keys.clear(); mobileDirections.clear(); mobileAction = false; });
+  document.addEventListener('visibilitychange', () => { if(document.hidden){keys.clear();mobileDirections.clear();mobileAction=false;}else{lastRenderAt=0;if(token)pollState();} });
   document.querySelectorAll('[data-dir]').forEach(btn => {
     const dir = btn.dataset.dir;
     btn.addEventListener('pointerdown', ev => { ev.preventDefault(); btn.setPointerCapture(ev.pointerId); mobileDirections.add(dir); });
@@ -220,8 +251,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     } else { $('modeNote').textContent = 'Modu oda sahibi seçer. Sen hazırsan oyun başlayınca mücadele et!'; }
     $('modeGrid').style.opacity = ['lobby','finished'].includes(state.phase) ? '1' : '.63';
     const roster = $('roster');
-    roster.innerHTML = state.players.map(p => `<div class="player-row ${p.id === state.selfId ? 'me' : ''}"><div class="player-avatar" style="background:${p.color}">${esc(p.name.slice(0,1).toLocaleUpperCase('tr-TR'))}</div><div><div class="player-name">${esc(p.name)} ${p.id === state.selfId ? '<span style="color:#42e8d5;font-size:8px">SEN</span>' : ''}</div><div class="player-meta">${p.isHost ? '<span class="crown">★ ODA SAHİBİ</span>' : (p.alive ? 'Hazır' : 'Elendi')}</div></div><div class="player-score">${p.score}</div></div>`).join('');
-    for (let i = state.players.length; i < 4; i++) roster.innerHTML += `<div class="empty-player">+ Oyuncu bekleniyor</div>`;
+    const nextRosterSignature = JSON.stringify(state.players.map(p => [p.id,p.name,p.color,p.score,p.alive,p.isHost,p.id===state.selfId]));
+    if (nextRosterSignature !== rosterSignature) {
+      rosterSignature = nextRosterSignature;
+      roster.innerHTML = state.players.map(p => `<div class="player-row ${p.id === state.selfId ? 'me' : ''}"><div class="player-avatar" style="background:${p.color}">${esc(p.name.slice(0,1).toLocaleUpperCase('tr-TR'))}</div><div><div class="player-name">${esc(p.name)} ${p.id === state.selfId ? '<span style="color:#42e8d5;font-size:8px">SEN</span>' : ''}</div><div class="player-meta">${p.isHost ? '<span class="crown">★ ODA SAHİBİ</span>' : (p.alive ? 'Hazır' : 'Elendi')}</div></div><div class="player-score">${p.score}</div></div>`).join('');
+      for (let i = state.players.length; i < 4; i++) roster.innerHTML += `<div class="empty-player">+ Oyuncu bekleniyor</div>`;
+    }
     const phaseLabels = {lobby:'OYUNCULAR BEKLENİYOR',countdown:'HAZIR OL!',running:'OYUN DEVAM EDİYOR',finished:'TUR BİTTİ'};
     $('phaseLabel').textContent = phaseLabels[state.phase] || 'ONLINE ARENA';
     $('phaseDot').style.background = state.phase === 'running' ? 'var(--mint)' : state.phase === 'finished' ? 'var(--pink)' : 'var(--yellow)';
@@ -229,18 +264,38 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   }
 
   function roundedRect(c,x,y,w,h,r,fill,stroke){c.beginPath();c.roundRect(x,y,w,h,r);if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.stroke()}}
-  function drawBackground() {
-    const g = ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#101e31');g.addColorStop(1,'#0b1322');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-    ctx.save();ctx.strokeStyle='#a9c8ee0d';ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.restore();
-    const glow=ctx.createRadialGradient(W/2,H/2,20,W/2,H/2,420);glow.addColorStop(0,'#32567816');glow.addColorStop(1,'#09101b00');ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
-    roundedRect(ctx,13,13,W-26,H-26,18,null,'#b5d6fb27');
+  function drawBackground(c=ctx) {
+    const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,'#101e31');g.addColorStop(1,'#0b1322');c.fillStyle=g;c.fillRect(0,0,W,H);
+    c.save();c.strokeStyle='#a9c8ee0d';c.lineWidth=1;for(let x=0;x<W;x+=48){c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke()}for(let y=0;y<H;y+=48){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}c.restore();
+    const glow=c.createRadialGradient(W/2,H/2,20,W/2,H/2,420);glow.addColorStop(0,'#32567816');glow.addColorStop(1,'#09101b00');c.fillStyle=glow;c.fillRect(0,0,W,H);
+    roundedRect(c,13,13,W-26,H-26,18,null,'#b5d6fb27');
+  }
+  function drawTankDecor(c=ctx){
+    c.save();c.strokeStyle='#ffbd4a38';c.lineWidth=2;c.setLineDash([8,10]);c.strokeRect(45,45,W-90,H-90);c.setLineDash([]);
+    const blocks=[[280,150,94,33],[590,150,94,33],[280,420,94,33],[590,420,94,33],[465,245,30,110]];
+    for(const [x,y,w,h] of blocks){roundedRect(c,x,y,w,h,8,'#172b3a','#ffbd4a32');c.fillStyle='#ffbd4a18';c.fillRect(x+8,y+7,w-16,4)}c.restore();
+  }
+  function drawSumo(c=ctx){
+    c.save();const cx=W/2,cy=H/2,gr=c.createRadialGradient(cx,cy,35,cx,cy,275);gr.addColorStop(0,'#41283d');gr.addColorStop(1,'#171b2c');c.fillStyle=gr;c.beginPath();c.arc(cx,cy,264,0,Math.PI*2);c.fill();c.strokeStyle='#ff6c916e';c.lineWidth=7;c.beginPath();c.arc(cx,cy,258,0,Math.PI*2);c.stroke();c.strokeStyle='#ffccd333';c.lineWidth=2;c.beginPath();c.arc(cx,cy,239,0,Math.PI*2);c.stroke();c.fillStyle='#ff6c9110';c.beginPath();c.arc(cx,cy,100,0,Math.PI*2);c.fill();c.fillStyle='#ff6c9152';c.font='900 13px Manrope';c.textAlign='center';c.fillText('SUMO RİNGİ',cx,cy+5);c.restore();
+  }
+  function drawPush(c=ctx){
+    c.save();const cx=W/2,cy=H/2;c.fillStyle='#42e8d508';c.fillRect(0,0,W,H);for(let r=160;r>=80;r-=20){c.strokeStyle=`rgba(66,232,213,${.08+(160-r)/1000})`;c.lineWidth=2;c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.stroke()}const g=c.createRadialGradient(cx,cy,10,cx,cy,118);g.addColorStop(0,'#42e8d542');g.addColorStop(1,'#42e8d505');c.fillStyle=g;c.beginPath();c.arc(cx,cy,112,0,Math.PI*2);c.fill();c.strokeStyle='#42e8d58a';c.lineWidth=3;c.setLineDash([7,6]);c.beginPath();c.arc(cx,cy,112,0,Math.PI*2);c.stroke();c.setLineDash([]);c.textAlign='center';c.font='900 15px Manrope';c.fillStyle='#42e8d5';c.fillText('KONTROL ALANI',cx,cy+5);c.restore();
+  }
+  function drawSoccer(c=ctx){
+    c.save();for(let i=0;i<8;i++){c.fillStyle=i%2?'#153e3a':'#17463e';c.fillRect(24+i*114,24,114,H-48)}c.strokeStyle='#b1f4d64d';c.lineWidth=3;c.strokeRect(24,24,W-48,H-48);c.beginPath();c.moveTo(W/2,24);c.lineTo(W/2,H-24);c.stroke();c.beginPath();c.arc(W/2,H/2,85,0,Math.PI*2);c.stroke();c.fillStyle='#76b8ff17';c.fillRect(24,H/2-88,48,176);c.fillStyle='#ff6c9117';c.fillRect(W-72,H/2-88,48,176);c.fillStyle='#a98bff17';c.fillRect(W/2-88,24,176,48);c.fillStyle='#ffbd4a17';c.fillRect(W/2-88,H-72,176,48);c.fillStyle='#d6f5e8';c.font='900 10px Manrope';c.textAlign='center';c.fillText('KALE 1',45,H/2-100);c.fillText('KALE 2',W-45,H/2-100);c.fillText('KALE 3',W/2,61);c.fillText('KALE 4',W/2,H-35);c.restore();
+  }
+  function rebuildStaticLayer(mode){
+    drawBackground(staticCtx);
+    if(mode==='tank')drawTankDecor(staticCtx);else if(mode==='sumo')drawSumo(staticCtx);else if(mode==='push')drawPush(staticCtx);else if(mode==='soccer')drawSoccer(staticCtx);
+    cachedMode=mode;
   }
   function drawPlayer(p) {
     if (!p.alive) { ctx.save();ctx.globalAlpha=.32;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,16,0,Math.PI*2);ctx.fill();ctx.restore();return; }
     ctx.save();
     if(p.invulnerable){ctx.globalAlpha=.58+.3*Math.sin(Date.now()/70)}
-    ctx.shadowColor=p.color;ctx.shadowBlur=p.power?27:13;
-    if(state.mode==='tank'){
+    ctx.shadowColor=p.color;ctx.shadowBlur=p.power?9:4;
+    const rs=renderState || state;
+    if(rs.mode==='tank'){
       ctx.translate(p.x,p.y);ctx.rotate(p.angle);
       roundedRect(ctx,-22,-18,44,9,4,'#162333',p.color);roundedRect(ctx,-22,9,44,9,4,'#162333',p.color);
       roundedRect(ctx,-18,-14,36,28,8,p.color,'#ffffff99');
@@ -256,52 +311,42 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     if(p.power){ctx.strokeStyle=p.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,27+Math.sin(Date.now()/45)*3,0,Math.PI*2);ctx.stroke()}
     ctx.restore();
     ctx.save();ctx.textAlign='center';ctx.font='bold 12px Manrope';ctx.fillStyle='#eaf3ff';ctx.shadowColor='#000';ctx.shadowBlur=5;ctx.fillText(p.name,p.x,p.y-28);
-    if(state.mode==='survival'){for(let i=0;i<p.lives;i++){ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x-10+(i*10),p.y+34,3,0,Math.PI*2);ctx.fill()}}
+    if(rs.mode==='survival'){for(let i=0;i<p.lives;i++){ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x-10+(i*10),p.y+34,3,0,Math.PI*2);ctx.fill()}}
     ctx.restore();
   }
-  function drawTankDecor(){
-    ctx.save();ctx.strokeStyle='#ffbd4a38';ctx.lineWidth=2;ctx.setLineDash([8,10]);ctx.strokeRect(45,45,W-90,H-90);ctx.setLineDash([]);
-    const blocks=[[280,150,94,33],[590,150,94,33],[280,420,94,33],[590,420,94,33],[465,245,30,110]];
-    for(const [x,y,w,h] of blocks){roundedRect(ctx,x,y,w,h,8,'#172b3a','#ffbd4a32');ctx.fillStyle='#ffbd4a18';ctx.fillRect(x+8,y+7,w-16,4)}ctx.restore();
-  }
-  function drawSumo(){
-    ctx.save();const cx=W/2,cy=H/2;let gr=ctx.createRadialGradient(cx,cy,35,cx,cy,275);gr.addColorStop(0,'#41283d');gr.addColorStop(1,'#171b2c');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(cx,cy,264,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ff6c916e';ctx.lineWidth=7;ctx.beginPath();ctx.arc(cx,cy,258,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='#ffccd333';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,239,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#ff6c9110';ctx.beginPath();ctx.arc(cx,cy,100,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff6c9152';ctx.font='900 13px Manrope';ctx.textAlign='center';ctx.fillText('SUMO RİNGİ',cx,cy+5);ctx.restore();
-  }
-  function drawPush(){
-    ctx.save();const cx=W/2,cy=H/2;ctx.fillStyle='#42e8d508';ctx.fillRect(0,0,W,H);for(let r=160;r>=80;r-=20){ctx.strokeStyle=`rgba(66,232,213,${.08+(160-r)/1000})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke()}let g=ctx.createRadialGradient(cx,cy,10,cx,cy,118);g.addColorStop(0,'#42e8d542');g.addColorStop(1,'#42e8d505');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,112,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#42e8d58a';ctx.lineWidth=3;ctx.setLineDash([7,6]);ctx.beginPath();ctx.arc(cx,cy,112,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.textAlign='center';ctx.font='900 15px Manrope';ctx.fillStyle='#42e8d5';ctx.fillText('KONTROL ALANI',cx,cy+5);ctx.restore();
-  }
-  function drawSoccer(){
-    ctx.save();for(let i=0;i<8;i++){ctx.fillStyle=i%2?'#153e3a':'#17463e';ctx.fillRect(24+i*114,24,114,H-48)}ctx.strokeStyle='#b1f4d64d';ctx.lineWidth=3;ctx.strokeRect(24,24,W-48,H-48);ctx.beginPath();ctx.moveTo(W/2,24);ctx.lineTo(W/2,H-24);ctx.stroke();ctx.beginPath();ctx.arc(W/2,H/2,85,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#76b8ff17';ctx.fillRect(24,H/2-88,48,176);ctx.fillStyle='#ff6c9117';ctx.fillRect(W-72,H/2-88,48,176);ctx.fillStyle='#a98bff17';ctx.fillRect(W/2-88,24,176,48);ctx.fillStyle='#ffbd4a17';ctx.fillRect(W/2-88,H-72,176,48);ctx.fillStyle='#d6f5e8';ctx.font='900 10px Manrope';ctx.textAlign='center';ctx.fillText('KALE 1',45,H/2-100);ctx.fillText('KALE 2',W-45,H/2-100);ctx.fillText('KALE 3',W/2,61);ctx.fillText('KALE 4',W/2,H-35);ctx.restore();
-  }
-  function drawGems(){for(const g of state.gems||[]){ctx.save();const pulse=1+Math.sin(Date.now()/190+g.pulse)*.13;ctx.translate(g.x,g.y);ctx.scale(pulse,pulse);ctx.shadowColor=g.kind==='bonus'?'#ffbd4a':'#b18bff';ctx.shadowBlur=22;ctx.fillStyle=g.kind==='bonus'?'#ffd36c':'#b18cff';ctx.strokeStyle='#fff9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(11,-3);ctx.lineTo(7,12);ctx.lineTo(-7,12);ctx.lineTo(-11,-3);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}}
-  function drawSurvival(){for(const h of state.hazards||[]){ctx.save();ctx.shadowColor='#ff875e';ctx.shadowBlur=23;const pulse=Math.sin(h.phase)*2;ctx.fillStyle='#ff875e35';ctx.beginPath();ctx.arc(h.x,h.y,h.r+9+pulse,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff875e';ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffe4d4';ctx.beginPath();ctx.arc(h.x-4,h.y-4,4,0,Math.PI*2);ctx.fill();ctx.restore()}}
-  function drawBall(){if(!state.ball)return;const b=state.ball;ctx.save();ctx.shadowColor='#fff';ctx.shadowBlur=16;ctx.fillStyle='#f3f7ff';ctx.beginPath();ctx.arc(b.x,b.y,16,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#26374e';ctx.lineWidth=2;ctx.beginPath();ctx.arc(b.x,b.y,9,b.spin,b.spin+Math.PI*1.3);ctx.stroke();ctx.beginPath();ctx.moveTo(b.x-12,b.y-5);ctx.lineTo(b.x+11,b.y+7);ctx.stroke();ctx.restore()}
-  function drawBullets(){for(const b of state.bullets||[]){ctx.save();ctx.shadowColor='#ffbd4a';ctx.shadowBlur=18;ctx.fillStyle='#fff2a5';ctx.beginPath();ctx.arc(b.x,b.y,b.r||6,0,Math.PI*2);ctx.fill();ctx.restore()}}
+  function drawGems(){for(const g of (renderState || state).gems||[]){ctx.save();const pulse=1+Math.sin(Date.now()/190+g.pulse)*.13;ctx.translate(g.x,g.y);ctx.scale(pulse,pulse);ctx.shadowColor=g.kind==='bonus'?'#ffbd4a':'#b18bff';ctx.shadowBlur=7;ctx.fillStyle=g.kind==='bonus'?'#ffd36c':'#b18cff';ctx.strokeStyle='#fff9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(11,-3);ctx.lineTo(7,12);ctx.lineTo(-7,12);ctx.lineTo(-11,-3);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}}
+  function drawSurvival(){for(const h of (renderState || state).hazards||[]){ctx.save();ctx.shadowColor='#ff875e';ctx.shadowBlur=7;const pulse=Math.sin(h.phase)*2;ctx.fillStyle='#ff875e35';ctx.beginPath();ctx.arc(h.x,h.y,h.r+9+pulse,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff875e';ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffe4d4';ctx.beginPath();ctx.arc(h.x-4,h.y-4,4,0,Math.PI*2);ctx.fill();ctx.restore()}}
+  function drawBall(){const rs=renderState || state;if(!rs.ball)return;const b=rs.ball;ctx.save();ctx.shadowColor='#fff';ctx.shadowBlur=6;ctx.fillStyle='#f3f7ff';ctx.beginPath();ctx.arc(b.x,b.y,16,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#26374e';ctx.lineWidth=2;ctx.beginPath();ctx.arc(b.x,b.y,9,b.spin,b.spin+Math.PI*1.3);ctx.stroke();ctx.beginPath();ctx.moveTo(b.x-12,b.y-5);ctx.lineTo(b.x+11,b.y+7);ctx.stroke();ctx.restore()}
+  function drawBullets(){for(const b of (renderState || state).bullets||[]){ctx.save();ctx.shadowColor='#ffbd4a';ctx.shadowBlur=6;ctx.fillStyle='#fff2a5';ctx.beginPath();ctx.arc(b.x,b.y,b.r||6,0,Math.PI*2);ctx.fill();ctx.restore()}}
   function drawOverlay(){
-    if(!state)return;
-    if(state.phase==='lobby'){
-      ctx.save();ctx.textAlign='center';ctx.fillStyle='#eef5ff';ctx.font='900 29px Manrope';ctx.fillText(state.playersCount<2?'ARKADAŞLARINI BEKLE':'ARENA HAZIR!',W/2,H/2-13);ctx.fillStyle='#a7b8d1';ctx.font='600 14px Manrope';ctx.fillText(state.playersCount<2?'En az 2 oyuncu katılınca başlayabilirsiniz.':'Oda sahibi oyunu başlatabilir.',W/2,H/2+17);ctx.restore();
-    } else if(state.phase==='countdown'){
-      const n=Math.ceil(state.countdown/1000);ctx.save();ctx.fillStyle='#06101ccc';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.shadowColor=MODE_UI[state.mode].accent;ctx.shadowBlur=35;ctx.fillStyle='#fff';ctx.font='1000 112px Manrope';ctx.fillText(n>0?n:'BAŞLA!',W/2,H/2+35);ctx.restore();
-    } else if(state.phase==='finished'){
-      ctx.save();ctx.fillStyle='#06101cd9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ffbd4a';ctx.font='900 15px Manrope';ctx.fillText('TUR TAMAMLANDI',W/2,H/2-42);ctx.fillStyle='#fff';ctx.font='1000 30px Manrope';ctx.fillText(state.resultText||'Oyun bitti',W/2,H/2+5);ctx.fillStyle='#aabbd3';ctx.font='600 13px Manrope';ctx.fillText(state.isHost?'Yeni tur için sağdaki butona bas.':'Oda sahibinin yeni turu başlatması bekleniyor.',W/2,H/2+39);ctx.restore();
+    const rs=renderState || state; if(!rs)return;
+    if(rs.phase==='lobby'){
+      ctx.save();ctx.textAlign='center';ctx.fillStyle='#eef5ff';ctx.font='900 29px Manrope';ctx.fillText(rs.playersCount<2?'ARKADAŞLARINI BEKLE':'ARENA HAZIR!',W/2,H/2-13);ctx.fillStyle='#a7b8d1';ctx.font='600 14px Manrope';ctx.fillText(rs.playersCount<2?'En az 2 oyuncu katılınca başlayabilirsiniz.':'Oda sahibi oyunu başlatabilir.',W/2,H/2+17);ctx.restore();
+    } else if(rs.phase==='countdown'){
+      const n=Math.ceil(rs.countdown/1000);ctx.save();ctx.fillStyle='#06101ccc';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.shadowColor=MODE_UI[rs.mode].accent;ctx.shadowBlur=35;ctx.fillStyle='#fff';ctx.font='1000 112px Manrope';ctx.fillText(n>0?n:'BAŞLA!',W/2,H/2+35);ctx.restore();
+    } else if(rs.phase==='finished'){
+      ctx.save();ctx.fillStyle='#06101cd9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ffbd4a';ctx.font='900 15px Manrope';ctx.fillText('TUR TAMAMLANDI',W/2,H/2-42);ctx.fillStyle='#fff';ctx.font='1000 30px Manrope';ctx.fillText(rs.resultText||'Oyun bitti',W/2,H/2+5);ctx.fillStyle='#aabbd3';ctx.font='600 13px Manrope';ctx.fillText(rs.isHost?'Yeni tur için sağdaki butona bas.':'Oda sahibinin yeni turu başlatması bekleniyor.',W/2,H/2+39);ctx.restore();
     }
   }
-  function render(){
-    ctx.clearRect(0,0,W,H);drawBackground();
-    if(state){
-      if(state.mode==='tank')drawTankDecor();if(state.mode==='sumo')drawSumo();if(state.mode==='push')drawPush();if(state.mode==='soccer')drawSoccer();if(state.mode==='gems')drawGems();if(state.mode==='survival')drawSurvival();
-      drawBullets();if(state.mode==='soccer')drawBall();
-      for(const p of state.players||[])drawPlayer(p);
-      drawOverlay();
-    } else {ctx.save();ctx.textAlign='center';ctx.fillStyle='#7e91ad';ctx.font='800 18px Manrope';ctx.fillText('MINI ARENA 4',W/2,H/2);ctx.restore()}
+  function render(timestamp=0){
     requestAnimationFrame(render);
+    if(document.hidden || timestamp-lastRenderAt<FRAME_MS)return;
+    lastRenderAt=timestamp;
+    renderState=makeRenderState(Date.now());
+    if(cachedMode!==(renderState?.mode||'menu'))rebuildStaticLayer(renderState?.mode||'menu');
+    ctx.drawImage(staticCanvas,0,0);
+    if(renderState){
+      if(renderState.mode==='gems')drawGems();if(renderState.mode==='survival')drawSurvival();
+      drawBullets();if(renderState.mode==='soccer')drawBall();
+      for(const p of renderState.players||[])drawPlayer(p);
+      drawOverlay();
+    }else{ctx.save();ctx.textAlign='center';ctx.fillStyle='#7e91ad';ctx.font='800 18px Manrope';ctx.fillText('MINI ARENA 4',W/2,H/2);ctx.restore()}
   }
   async function init(){
-    if(token) await rejoin();
+    if(token)await rejoin();
     await pollState();
-    setInterval(pollState,1000);
-    setInterval(sendInput,70);
+    // Lobby: 2 updates/sec. During a match: 10 updates/sec. Never poll and send input separately.
+    setInterval(()=>{if(token)sendInput();else pollState()},50);
     render();
   }
   init();
