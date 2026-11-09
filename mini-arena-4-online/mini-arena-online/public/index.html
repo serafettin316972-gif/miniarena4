@@ -1,692 +1,629 @@
-'use strict';
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0a0d19">
+<title>Mini Arena 4 — Online Parti Oyunları</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#111a2a;--panel2:#0d1523;--line:rgba(173,195,226,.14);--muted:#8492aa;--text:#eef4ff;--mint:#42e8d5;--yellow:#ffbd4a;--pink:#ff6c91;--purple:#a98bff;--blue:#76b8ff;--orange:#ff875e}
+*{box-sizing:border-box}html{min-width:320px}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -24%,#213659 0,transparent 54%),radial-gradient(ellipse at 100% 100%,#14172d 0,transparent 42%),var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif;padding:22px 18px 34px}button,input{font:inherit}button{touch-action:manipulation}.app{width:min(1380px,100%);margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:12px;min-width:0}.logo{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:25px;color:#07131b;background:linear-gradient(140deg,#a5fff3,#42e8d5 55%,#21b9b1);box-shadow:0 8px 28px #42e8d52b}.brand h1{font-size:18px;line-height:1.1;letter-spacing:.13em;margin:0;font-weight:900}.subtitle{font-size:10px;letter-spacing:.18em;color:#8e9db7;margin-top:6px;font-weight:700}.header-right{display:flex;align-items:center;gap:9px}.lan-pill,.room-pill{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#111d2c;border:1px solid var(--line);border-radius:999px;font-size:10px;color:#aab8ce;letter-spacing:.1em;font-weight:800}.lan-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}.room-pill strong{font:600 15px 'DM Mono',monospace;color:var(--yellow);letter-spacing:.12em}.copy-btn{border:1px solid #42e8d54d;background:#42e8d51a;color:var(--mint);padding:6px 9px;border-radius:999px;font-size:9px;font-weight:900;cursor:pointer}.copy-btn:hover{background:#42e8d530}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:15px;align-items:start}.game-panel,.side-panel{background:linear-gradient(145deg,rgba(18,28,46,.97),rgba(11,18,32,.98));border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 18px 65px #0005}.game-top{height:58px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);background:#ffffff04}.mode-label{display:flex;align-items:center;gap:9px;min-width:0}.mode-icon{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:#42e8d51a;color:var(--mint);font-size:17px}.mode-title{font-size:12px;font-weight:900;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-sub{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.06em}.timer{font:600 14px 'DM Mono',monospace;color:var(--mint);background:#42e8d511;border:1px solid #42e8d533;border-radius:9px;padding:8px 12px;min-width:74px;text-align:center}.canvas-wrap{position:relative;padding:12px;background:#080e19}.canvas-frame{position:relative;overflow:hidden;border:1px solid #ffffff12;border-radius:13px;background:#0c1523;box-shadow:inset 0 0 60px #0008}canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;touch-action:none;contain:strict}
+/* Full-screen skin selection */
+.skin-screen{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#526cae 0%,#283b72 42%,#10172f 100%);overflow:auto}
+.skin-screen:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#ffffff12 1px,transparent 1px),linear-gradient(45deg,#ffffff0b 1px,transparent 1px);background-size:44px 44px;opacity:.5;pointer-events:none}
+.skin-screen-inner{position:relative;width:min(1220px,100%);text-align:center;transform:scale(.5);transform-origin:center center}
+.skin-screen-head{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:26px;min-height:90px}
+.skin-screen-title{margin:0;color:#fff;font-size:clamp(38px,6vw,76px);font-weight:1000;letter-spacing:.015em;line-height:1;text-shadow:0 5px 0 #080b16,3px 7px 0 #080b16,-3px 7px 0 #080b16,0 10px 24px #0008}
+.skin-back{position:absolute;left:0;top:0;height:58px;padding:0 22px;border:3px solid #080b16;border-radius:19px;background:linear-gradient(145deg,#48568d,#29345f);color:white;font-size:19px;font-weight:1000;text-shadow:0 2px #080b16;box-shadow:0 5px 0 #080b16;cursor:pointer}
+.skin-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;max-width:1110px;margin:0 auto}
+.skin-big-card{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;min-height:450px;padding:0 14px 16px;border:4px solid #080b16;border-radius:27px;background:linear-gradient(180deg,#18213dcf,#6375b8b8);box-shadow:0 7px 0 #080b16,inset 0 0 0 2px #ffffff24;overflow:hidden;cursor:pointer;color:white;transition:transform .15s,border-color .15s}
+.skin-big-card:hover{transform:translateY(-4px)}.skin-big-card.active{border-color:#5cff4c;box-shadow:0 7px 0 #080b16,inset 0 0 0 3px #b6ff9c88,0 0 22px #62ff4c66}
+.skin-big-name{width:calc(100% + 28px);min-height:91px;margin:0 -14px 10px;padding:15px 8px 10px;background:#10172dbb;border-bottom:2px solid #080b16;font-size:clamp(17px,2vw,27px);font-weight:1000;line-height:1.2;text-shadow:0 3px #080b16}
+.skin-preview-stage{height:235px;width:100%;display:grid;place-items:center;position:relative;flex:1}
+.skin-preview-stage:after{content:"";position:absolute;bottom:20px;width:72%;height:26px;border-radius:50%;background:#11182d88;filter:blur(2px)}
+.bim-preview-svg{position:relative;z-index:1;width:clamp(112px,14vw,170px);height:auto;overflow:visible;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}.hair-preview-svg{position:relative;z-index:1;width:clamp(112px,14vw,170px);height:auto;overflow:visible;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}.pink-preview-svg{position:relative;z-index:1;width:clamp(112px,14vw,170px);height:auto;overflow:visible;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}.skin-preview-emoji{position:relative;z-index:1;font-size:clamp(105px,13vw,165px);line-height:1;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}
+.skin-card-select{position:relative;z-index:2;width:100%;height:67px;border:3px solid #080b16;border-radius:25px;background:linear-gradient(180deg,#4f8df2,#3160c8);box-shadow:0 5px 0 #080b16;color:white;font-size:31px;font-weight:1000;text-shadow:0 3px #080b16;cursor:pointer}
+.skin-big-card.active .skin-card-select{background:linear-gradient(180deg,#5cf04c,#21c92f)}
+.skin-check{position:absolute;right:9px;top:96px;z-index:3;width:58px;height:58px;border-radius:50%;display:none;place-items:center;background:#22db38;border:4px solid #080b16;color:white;font-size:38px;font-weight:1000;text-shadow:0 2px #08751b;box-shadow:0 3px 0 #080b16}
+.skin-big-card.active .skin-check{display:grid}
+.skin-screen-foot{margin:32px 0 0;color:#fff;font-size:clamp(21px,3vw,34px);font-weight:1000;text-shadow:0 3px #080b16,0 5px 10px #0008}
+.skin-current{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 13px;padding:10px 12px;border:1px solid #42e8d54a;border-radius:11px;background:#42e8d510;color:#b8fff4;font-size:11px;font-weight:900}
+.skin-change{border:1px solid #42e8d56b;border-radius:8px;background:#42e8d51c;color:#74f6e5;padding:7px 10px;font-size:10px;font-weight:1000;cursor:pointer;white-space:nowrap}
+@media(max-width:760px){.skin-screen{padding:16px 12px}.skin-screen-head{justify-content:flex-end;margin-bottom:18px;min-height:58px}.skin-screen-title{font-size:clamp(31px,8vw,52px);margin-left:90px}.skin-back{height:45px;padding:0 12px;font-size:14px;border-radius:14px}.skin-card-grid{gap:10px}.skin-big-card{min-height:330px;padding:0 8px 10px;border-width:3px;border-radius:18px}.skin-big-name{width:calc(100% + 16px);margin:0 -8px 5px;min-height:70px;padding:10px 4px;font-size:clamp(12px,2.8vw,18px)}.skin-preview-stage{height:165px}.skin-preview-emoji{font-size:clamp(62px,14vw,105px)}.skin-card-select{height:48px;font-size:21px;border-radius:15px;border-width:2px}.skin-check{top:74px;right:5px;width:38px;height:38px;font-size:25px;border-width:3px}.skin-screen-foot{margin-top:22px}}
+@media(max-width:480px){.skin-card-grid{grid-template-columns:1fr;max-width:330px}.skin-big-card{min-height:250px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;column-gap:8px;align-items:center}.skin-big-name{grid-column:1/-1;min-height:auto}.skin-preview-stage{height:130px}.skin-preview-emoji{font-size:85px}.skin-card-select{width:100%;font-size:19px}.skin-check{top:54px}.skin-screen-foot{font-size:21px}}
 
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
+.join-overlay{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;background:#050914b8;backdrop-filter:blur(7px)}.join-card{width:min(410px,100%);padding:28px 27px 24px;background:linear-gradient(145deg,#152238f5,#0e1727f5);border:1px solid #d0e1ff26;border-radius:19px;box-shadow:0 25px 90px #000a;text-align:center}.join-emblem{width:54px;height:54px;margin:0 auto 13px;border-radius:17px;display:grid;place-items:center;background:#42e8d51b;border:1px solid #42e8d54a;color:var(--mint);font-size:28px}.join-card h2{font-size:23px;margin:0 0 7px;font-weight:900}.join-card p{font-size:12px;color:#9baac2;line-height:1.65;margin:0 0 19px}.field{width:100%;height:46px;margin-bottom:10px;border:1px solid #c2d3ef21;border-radius:10px;background:#091321;color:var(--text);outline:none;padding:0 14px}.field:focus{border-color:#42e8d58c;box-shadow:0 0 0 3px #42e8d510}.field::placeholder{color:#63718a}.primary{height:46px;width:100%;border:0;border-radius:10px;background:linear-gradient(100deg,#51efd9,#31cfbf);color:#071b1a;font-weight:900;letter-spacing:.04em;cursor:pointer;box-shadow:0 8px 25px #42e8d526}.primary:hover{filter:brightness(1.06);transform:translateY(-1px)}.primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.skin-picker{margin:0 0 15px;text-align:left}
+.skin-picker-title{font-size:10px;font-weight:900;letter-spacing:.12em;color:#aab8ce;margin:0 0 8px}
+.skin-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.skin-option{min-width:0;padding:8px 4px;border:1px solid #c2d3ef21;border-radius:10px;background:#091321;color:#dce8f8;cursor:pointer;font-size:9px;font-weight:800;line-height:1.35}
+.skin-option.active{border:2px solid #42e8d5;background:#42e8d512;color:#7ff8e8}
+.skin-face{display:block;font-size:22px;margin-bottom:4px}
+.skin-option small{display:block;color:#8292aa;font-size:8px;font-weight:600;margin-top:3px}
+.join-error{min-height:19px;margin-top:9px;font-size:11px;color:#ff929d}.join-tip{font-size:10px;color:#75849e;margin-top:9px}.canvas-status{position:absolute;left:24px;top:22px;z-index:2;display:flex;gap:7px;align-items:center;padding:7px 10px;border:1px solid #b8d0ed22;background:#091321b9;border-radius:999px;font-size:9px;letter-spacing:.12em;color:#adbed7;font-weight:900;pointer-events:none}.status-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow)}.bottom-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding:12px 16px;color:#7f8da5;font-size:10px}.legend{display:flex;gap:15px;align-items:center;flex-wrap:wrap}.legend span{display:flex;gap:6px;align-items:center}.swatch{width:8px;height:8px;border-radius:50%;display:inline-block}.connection{display:flex;align-items:center;gap:7px}.connection .status-dot{background:var(--mint)}
+.side-panel{padding:17px;display:flex;flex-direction:column;gap:17px}.side-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.section-title{margin:0;font-size:10px;letter-spacing:.17em;color:#8999b3;font-weight:900}.count-pill{font:600 11px 'DM Mono',monospace;color:var(--mint);background:#42e8d511;border:1px solid #42e8d52a;padding:6px 9px;border-radius:8px}.roster{display:flex;flex-direction:column;gap:7px}.player-row,.empty-player{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 10px;background:#ffffff05;border:1px solid var(--line);border-radius:11px;min-height:49px}.player-row.me{border-color:#42e8d54f;background:#42e8d50a}.player-avatar{width:29px;height:29px;border-radius:10px;display:grid;place-items:center;color:#07121b;font-size:11px;font-weight:1000}.player-name{font-size:11px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.player-meta{font-size:9px;color:#7f8da5;margin-top:2px}.player-score{font:600 13px 'DM Mono',monospace;color:var(--yellow)}.crown{color:var(--yellow);font-size:10px}.empty-player{display:flex;justify-content:center;border-style:dashed;color:#67758c;font-size:10px}.divider{height:1px;background:var(--line)}.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mode-card{min-height:96px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;border:1px solid var(--line);background:#ffffff05;color:var(--text);border-radius:12px;padding:11px;cursor:pointer;transition:.15s}.mode-card:hover:not(:disabled){transform:translateY(-2px);border-color:#8ca5c65e;background:#ffffff0a}.mode-card.active{border-color:var(--mode-accent,#42e8d5);background:color-mix(in srgb,var(--mode-accent,#42e8d5) 10%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--mode-accent,#42e8d5) 14%,transparent)}.mode-card:disabled{cursor:default;opacity:.78}.mode-emoji{font-size:19px;line-height:1.1}.mode-name{font-size:10px;font-weight:1000;letter-spacing:.04em}.mode-desc{font-size:8px;line-height:1.4;color:#8998b0}.host-note{font-size:9px;color:#77869e;line-height:1.5}.start-btn{height:44px;border:0;border-radius:10px;background:linear-gradient(100deg,#ffc75d,#f39e33);color:#201304;font-size:11px;font-weight:1000;letter-spacing:.08em;cursor:pointer;box-shadow:0 8px 23px #ffbd4a20}.start-btn:disabled{opacity:.36;cursor:not-allowed;box-shadow:none}.secondary-btn{height:40px;border:1px solid var(--line);background:#ffffff08;color:#bdcbe0;border-radius:10px;font-size:10px;font-weight:900;cursor:pointer}.secondary-btn:hover{background:#ffffff10}.controls{padding:12px;border:1px solid var(--line);border-radius:11px;background:#ffffff04}.control-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0;font-size:10px;color:#9caac1}.key{font:600 9px 'DM Mono',monospace;color:#e0eaff;background:#202d43;border:1px solid #42516a;border-radius:5px;padding:3px 6px;white-space:nowrap}.host-badge{font-size:8px;font-weight:1000;letter-spacing:.08em;color:var(--yellow);border:1px solid #ffbd4a4a;background:#ffbd4a10;padding:3px 5px;border-radius:5px}.mode-instructions{font-size:10px;line-height:1.6;color:#9baac0}.mobile-pad{display:none;justify-content:space-between;align-items:center;gap:10px;padding-top:10px}.dpad{display:grid;grid-template-columns:39px 39px 39px;grid-template-rows:39px 39px;gap:4px}.dpad button,.mobile-action{border:1px solid var(--line);background:#19263b;color:#dbe7f7;border-radius:9px;font-size:14px}.dpad button:nth-child(1){grid-column:2}.dpad button:nth-child(2){grid-column:1;grid-row:2}.dpad button:nth-child(3){grid-column:2;grid-row:2}.dpad button:nth-child(4){grid-column:3;grid-row:2}.mobile-action{height:47px;padding:0 15px;color:var(--yellow);font-size:10px;font-weight:1000}.toast{position:fixed;left:50%;bottom:22px;z-index:10;transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:10px 15px;background:#14243a;border:1px solid #42e8d54f;border-radius:999px;color:#dffdf8;font-size:11px;box-shadow:0 8px 35px #0009;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}.hidden{display:none!important}
+@media(max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 305px}.side-panel{padding:14px}.mode-grid{gap:6px}.mode-card{min-height:94px;padding:9px}}
+@media(max-width:780px){body{padding:14px 10px 26px}.layout{grid-template-columns:1fr}.side-panel{display:grid;grid-template-columns:1fr 1fr;gap:13px}.roster-section{grid-row:span 2}.modes-section{grid-column:2}.start-section{grid-column:2}.rules-section{grid-column:1/-1}.mode-grid{grid-template-columns:repeat(3,1fr)}.mode-card{min-height:93px}.canvas-wrap{padding:8px}}
+@media(max-width:560px){header{align-items:flex-start;flex-wrap:wrap}.header-right{width:100%;justify-content:space-between}.brand h1{font-size:15px}.subtitle{font-size:8px}.lan-pill{font-size:9px}.room-pill{font-size:9px}.layout{gap:10px}.side-panel{display:flex}.mode-grid{grid-template-columns:repeat(2,1fr)}.mode-card{min-height:88px}.game-top{height:51px;padding:0 12px}.mode-title{font-size:10px}.canvas-status{top:15px;left:15px}.bottom-bar{padding:10px 12px}.mobile-pad{display:flex}.join-card{padding:22px 18px}.join-card h2{font-size:20px}}
 
-const HOST = '0.0.0.0';
-const START_PORT = Number(process.env.PORT || 10000);
-let ACTIVE_PORT = START_PORT;
-const WORLD = { width: 960, height: 600 };
-const MAX_PLAYERS = 4;
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-let ROOM_CODE = null;
-function makeRoomCode() { return Array.from({ length: 6 }, () => CODE_ALPHABET[crypto.randomInt(CODE_ALPHABET.length)]).join(''); }
-const COLORS = ['#42e8d5', '#ffbd4a', '#a98bff', '#ff6c91'];
-const MODES = {
-  tank: { title: 'Tank Savaşı', short: 'TANK', description: 'Tankını sür, siperleri kullan ve rakiplerini vur.', duration: 90, target: 15, action: 'ATEŞ ET', key: 'SPACE', accent: '#ffbd4a' },
-  sumo: { title: 'Sumo Güreş', short: 'GÜREŞ', description: 'Daralan ringde rakiplerini dışarı gönder. İki hakkın var!', duration: 75, target: 8, action: 'GÜÇLÜ İTİŞ', key: 'SPACE', accent: '#ff6c91' },
-  push: { title: 'İtişme Arenası', short: 'İTİŞME', description: 'Küçülen merkez alanını ele geçir, rakiplerini şok dalgasıyla savur.', duration: 60, target: 45, action: 'ŞOK DALGASI', key: 'SPACE', accent: '#42e8d5' },
-  soccer: { title: 'Top Kapmaca', short: 'TOP', description: 'Dört küçük kaleden birine daha isabetli şutlar gönder.', duration: 90, target: 8, action: 'ŞUT ÇEK', key: 'SPACE', accent: '#76b8ff' },
-  gems: { title: 'Elmas Avı', short: 'ELMAS', description: 'Daha az çıkan elmasları kap. Altın elmaslar 3 puan!', duration: 75, target: 23, action: 'DEPAR', key: 'SPACE', accent: '#b18cff' },
-  survival: { title: 'Meteor Yağmuru', short: 'HAYATTA KAL', description: 'Meteor dalgalarından kaç, avcı meteordan sıyrıl ve can kristallerini topla.', duration: 90, target: 999, action: 'KALKAN DEPARI', key: 'SPACE', accent: '#ff875e' },
-  hotpotato: { title: 'Bomba Pasla', short: 'BOMBA', description: 'Bomba sende patlamadan SPACE ile yakındaki rakibe pasla. Patlayan oyuncu can kaybeder!', duration: 75, target: 6, action: 'BOMBA PASLA', key: 'SPACE', accent: '#ff5b62' },
-  floor: { title: 'Çöken Zemin', short: 'ZEMİN', description: 'Üzerinde durduğun karo çatlayıp çöker. Sürekli hareket et, boşluğa düşme!', duration: 80, target: 15, action: 'ZIPLA', key: 'SPACE', accent: '#70d6ff' },
-};
-const MODE_IDS = Object.keys(MODES);
+.extra-control{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;font-size:10px;color:#9caac1}.field.compact{width:58%;height:34px;margin:0;padding:0 8px;font-size:10px}.daily-tasks{display:grid;gap:7px;margin-top:9px}.daily-task{padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#ffffff05;font-size:9px;color:#aab8ce}.daily-task strong{display:block;color:#e8f0ff;font-size:10px;margin-bottom:3px}.daily-progress{height:4px;margin-top:6px;background:#202b40;border-radius:99px;overflow:hidden}.daily-progress i{display:block;height:100%;background:var(--mint);border-radius:99px}.arena-banner{position:absolute;right:22px;top:22px;z-index:2;padding:7px 10px;border:1px solid #ffbd4a66;border-radius:999px;background:#171b2bd9;color:#ffdc8b;font-size:10px;font-weight:1000;pointer-events:none}.spectator-banner{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:3;padding:8px 14px;border:1px solid #a98bff88;border-radius:999px;background:#1a1732e8;color:#d8c9ff;font-size:10px;font-weight:1000;pointer-events:none;white-space:nowrap}.extras-section,.daily-section{padding-top:2px}
+.version-tag{display:inline-block;margin-left:8px;padding:3px 7px;border:1px solid #6f83b5;border-radius:7px;background:#172344;color:#cbd8ff;font-size:11px;font-weight:800;vertical-align:middle;letter-spacing:.3px}
+</style>
+</head>
+<body>
+<div class="skin-screen" id="skinScreen" aria-label="Karakter seçimi">
+  <div class="skin-screen-inner">
+    <div class="skin-screen-head"><button class="skin-back" id="skinBackButton" type="button">⬅ GERİ DÖN</button><h1 class="skin-screen-title">SKİN SEÇİMİ</h1></div>
+    <div class="skin-card-grid" id="skinOptions">
+      <button class="skin-big-card active" type="button" data-skin="tooth"><span class="skin-check">✓</span><span class="skin-big-name">Çürük Dişli<br>Tek Kaşlı</span><span class="skin-preview-stage"><span class="skin-preview-emoji">🧟</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="hair"><span class="skin-check">✓</span><span class="skin-big-name">Uzun Saçlı<br>Tek Kaşlı</span><span class="skin-preview-stage"><svg class="hair-preview-svg" viewBox="0 0 180 190" role="img" aria-label="Uzun saçlı tek kaşlı karakter">
+  <ellipse cx="90" cy="174" rx="59" ry="9" fill="#10182d" opacity=".55"/>
+  <g stroke="#080b16" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M42 94 Q18 48 54 28 Q73 4 94 24 Q119 5 139 34 Q163 54 143 105 L147 143 Q132 158 125 130 L119 91 L61 91 L55 132 Q42 157 30 139 Z" fill="#38251f"/>
+    <path d="M53 77 Q43 40 76 31 Q108 16 130 48 Q141 65 127 91 L53 91 Z" fill="#38251f"/>
+    <path d="M62 88 Q54 112 62 137 Q72 157 90 158 Q113 158 123 136 Q130 111 118 83 Q90 98 62 88 Z" fill="#f0c7a7"/>
+  </g>
+  <ellipse cx="76" cy="105" rx="5" ry="10" fill="#080b16"/>
+  <ellipse cx="105" cy="105" rx="5" ry="10" fill="#080b16"/>
+  <path d="M68 87 Q89 94 113 83" fill="none" stroke="#211a1b" stroke-width="8" stroke-linecap="round"/>
+  <path d="M79 133 Q91 143 104 133" fill="none" stroke="#b88762" stroke-width="6" stroke-linecap="round"/>
+</svg></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="pink"><span class="skin-check">✓</span><span class="skin-big-name">Pembe İnsan</span><span class="skin-preview-stage"><svg class="pink-preview-svg" viewBox="0 0 180 190" role="img" aria-label="Pembe İnsan karakteri">
+  <ellipse cx="90" cy="174" rx="58" ry="9" fill="#10182d" opacity=".55"/>
+  <g stroke="#080b16" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M64 112 Q43 126 38 151 Q34 166 48 166 Q59 166 67 143 L74 128" fill="#ff70b7"/>
+    <path d="M116 112 Q137 126 142 151 Q146 166 132 166 Q121 166 113 143 L106 128" fill="#ff70b7"/>
+    <path d="M72 119 L65 166 Q64 174 75 174 L88 174 L91 137 L94 174 L108 174 Q119 174 117 166 L108 119" fill="#ff70b7"/>
+    <circle cx="90" cy="68" r="49" fill="#ff70b7"/>
+    <path d="M66 58 Q83 66 108 51" fill="none"/>
+  </g>
+  <ellipse cx="78" cy="78" rx="5" ry="11" fill="#080b16"/>
+  <ellipse cx="105" cy="78" rx="5" ry="11" fill="#080b16"/>
+</svg></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="ghost"><span class="skin-check">✓</span><span class="skin-big-name">Korkak Hayalet</span><span class="skin-preview-stage"><span class="skin-preview-emoji">👻</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="alien"><span class="skin-check">✓</span><span class="skin-big-name">Marslı Kafa</span><span class="skin-preview-stage"><span class="skin-preview-emoji">👽</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="wizard"><span class="skin-check">✓</span><span class="skin-big-name">BİM Çalışanı</span><span class="skin-preview-stage"><svg class="bim-preview-svg" viewBox="0 0 180 190" role="img" aria-label="Kırmızı BİM polo tişörtlü çalışan">
+  <ellipse cx="90" cy="174" rx="58" ry="9" fill="#10182d" opacity=".55"/>
+  <g stroke="#080b16" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M69 113 L61 163 Q60 173 72 173 L86 173 L90 139 L94 173 L109 173 Q120 173 118 163 L110 113" fill="#252a35"/>
+    <path d="M68 91 Q48 94 40 116 L32 145 Q29 156 42 159 Q53 160 58 145 L67 123 L113 123 L122 145 Q127 160 139 156 Q150 152 145 139 L136 112 Q129 94 111 91 Z" fill="#ed171f"/>
+    <path d="M72 88 Q90 101 108 88 L104 107 L90 117 L76 107 Z" fill="#c81019"/>
+    <circle cx="90" cy="59" r="34" fill="#f0c7a7"/>
+  </g>
+  <path d="M58 47 Q90 54 122 46" fill="none" stroke="#17131a" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="77" cy="64" rx="4" ry="7" fill="#10131c"/><ellipse cx="103" cy="64" rx="4" ry="7" fill="#10131c"/>
+  <path d="M86 82 Q91 86 96 82" fill="none" stroke="#9b6d54" stroke-width="4" stroke-linecap="round"/>
+  <path d="M87 91 L90 105 L94 91" fill="#f7f7f7" stroke="#080b16" stroke-width="2"/>
+  <rect x="103" y="112" width="25" height="14" rx="2" fill="#fff"/>
+  <text x="115.5" y="122" text-anchor="middle" font-size="9" font-weight="900" fill="#ed171f" stroke="none">BİM</text>
+</svg></span><span class="skin-card-select">SEÇ</span></button>
+    </div>
+    <div class="skin-screen-foot">Favori karakterini seç!</div>
+  </div>
+</div>
+<main class="app">
+  <header>
+    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.13</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
+    <div class="header-right"><div class="lan-pill"><i class="lan-dot"></i> ONLINE ARENA</div><div class="room-pill"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="copy-btn" id="copyCode" type="button">KOPYALA</button></div></div>
+  </header>
+  <div class="layout">
+    <section class="game-panel">
+      <div class="game-top"><div class="mode-label"><div class="mode-icon" id="modeIcon">▣</div><div><div class="mode-title" id="modeTitle">TANK SAVAŞI</div><div class="mode-sub" id="modeSub">MOD SEÇİMİNİ BEKLİYOR</div></div></div><div class="timer" id="timer">--:--</div></div>
+      <div class="canvas-wrap">
+        <div class="canvas-frame">
+          <canvas id="arena" width="960" height="600" aria-label="Mini Arena oyun alanı"></canvas><div id="arenaBanner" class="arena-banner hidden"></div><div id="spectatorBanner" class="spectator-banner hidden">İZLEYİCİ MODU · MAÇI İZLİYORSUN</div>
+          <div class="canvas-status"><i class="status-dot" id="phaseDot"></i><span id="phaseLabel">ODA BEKLENİYOR</span></div>
+          <div class="join-overlay hidden" id="joinOverlay">
+            <div class="join-card">
+              <div class="join-emblem">✦</div><h2>Mini Arena'ya hoş geldin</h2>
+              <p>Bir oda oluştur veya 6 haneli davet koduyla katıl. En fazla 4 kişi, 8 farklı mini oyun, 4 arena haritası ve seri maçlar!</p>
+              <div class="skin-current"><span id="selectedSkinLabel">Seçilen karakter: Çürük Dişli</span><button class="skin-change" id="changeSkinButton" type="button">SKİN DEĞİŞTİR</button></div>
+              <input class="field" id="nameInput" maxlength="14" placeholder="Oyuncu adın" autocomplete="nickname" required>
+              <button class="primary" id="createRoomButton" type="button">ODA OLUŞTUR&nbsp; ✦</button>
+              <div style="display:flex;align-items:center;gap:10px;margin:15px 0;color:#71819a;font-size:10px;font-weight:800;letter-spacing:.12em"><span style="height:1px;background:#ffffff20;flex:1"></span>YA DA DAVET KODUYLA KATIL<span style="height:1px;background:#ffffff20;flex:1"></span></div>
+              <form id="joinForm"><input class="field" id="codeInput" maxlength="6" minlength="6" placeholder="6 HANELİ DAVET KODU" autocomplete="one-time-code" autocapitalize="characters" required><button class="primary" id="joinButton" type="submit">OYUNA KATIL&nbsp; →</button></form>
+              <div class="join-error" id="joinError"></div><div class="join-tip">Arkadaşların yalnızca bu siteyi açar; hiçbir şey indirmez.</div>
+            </div>
+          </div>
+        </div>
+        <div class="mobile-pad" id="mobilePad"><div class="dpad"><button data-dir="up">▲</button><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div><button class="mobile-action" id="mobileAction">SPACE<br><small id="mobileActionText">ÖZEL HAREKET</small></button></div>
+      </div>
+      <div class="bottom-bar"><div class="legend"><span><i class="swatch" style="background:#42e8d5"></i> 1. OYUNCU</span><span><i class="swatch" style="background:#ffbd4a"></i> 2. OYUNCU</span><span><i class="swatch" style="background:#a98bff"></i> 3. OYUNCU</span><span><i class="swatch" style="background:#ff6c91"></i> 4. OYUNCU</span></div><div class="connection"><i class="status-dot"></i><span id="connectionText">Sunucu aranıyor...</span></div></div>
+    </section>
+    <aside class="side-panel">
+      <section class="roster-section">
+        <div class="side-head"><h3 class="section-title">OYUNCULAR</h3><div class="count-pill" id="playerCount">0 / 4</div></div>
+        <div class="roster" id="roster" style="margin-top:10px"></div>
+      </section>
+      <div class="divider"></div>
+      <section class="modes-section">
+        <div class="side-head"><h3 class="section-title">OYUN MODLARI</h3><span class="host-badge" id="hostBadge">ODA SAHİBİ SEÇER</span></div>
+        <div class="mode-grid" id="modeGrid" style="margin-top:10px">
+          <button class="mode-card active" data-mode="tank" style="--mode-accent:#ffbd4a"><span class="mode-emoji">🛡️</span><span class="mode-name">TANK SAVAŞI</span><span class="mode-desc">Sür, nişan al, ateş et.</span></button>
+          <button class="mode-card" data-mode="sumo" style="--mode-accent:#ff6c91"><span class="mode-emoji">🥋</span><span class="mode-name">SUMO GÜREŞ</span><span class="mode-desc">Rakipleri ring dışına at.</span></button>
+          <button class="mode-card" data-mode="push" style="--mode-accent:#42e8d5"><span class="mode-emoji">💥</span><span class="mode-name">İTİŞME</span><span class="mode-desc">Merkez bölgeyi ele geçir.</span></button>
+          <button class="mode-card" data-mode="soccer" style="--mode-accent:#76b8ff"><span class="mode-emoji">⚽</span><span class="mode-name">TOP KAPMACA</span><span class="mode-desc">Topu kap, kaleye yolla.</span></button>
+          <button class="mode-card" data-mode="gems" style="--mode-accent:#a98bff"><span class="mode-emoji">💎</span><span class="mode-name">ELMAS AVI</span><span class="mode-desc">Elmasları herkesten önce kap.</span></button>
+          <button class="mode-card" data-mode="survival" style="--mode-accent:#ff875e"><span class="mode-emoji">☄️</span><span class="mode-name">METEOR YAĞMURU</span><span class="mode-desc">Dalgalar, avcı meteor ve can kristalleri.</span></button>
+          <button class="mode-card" data-mode="hotpotato" style="--mode-accent:#ff5b62"><span class="mode-emoji">💣</span><span class="mode-name">BOMBA PASLA</span><span class="mode-desc">Patlamadan SPACE ile rakibe pasla!</span></button>
+          <button class="mode-card" data-mode="floor" style="--mode-accent:#70d6ff"><span class="mode-emoji">🧊</span><span class="mode-name">ÇÖKEN ZEMİN</span><span class="mode-desc">Bastığın karolar çatlar ve çöker.</span></button>
+        </div>
+        <div class="host-note" id="modeNote" style="margin-top:9px">Modu oda sahibi seçer. Diğer oyuncular seçilen moda katılır.</div>
+      </section>
+      <section class="start-section" id="hostControls">
+        <button class="start-btn" id="startButton" style="width:100%" disabled>2 OYUNCU BEKLENİYOR</button>
+        <button class="secondary-btn hidden" id="finishButton" type="button" style="width:100%;margin-top:8px;border-color:#ff6c91;color:#ff9aaa">TURU BİTİR</button>
+        <div class="host-note" id="startNote" style="margin-top:8px">İlk katılan oyuncu oda sahibi olur ve turu başlatır.</div>
+      </section>
 
-const players = new Map();
-let hostId = null;
-let modeId = 'tank';
-let phase = 'lobby';
-let roundEndsAt = null;
-let countdownEndsAt = null;
-let resultText = '';
-let roundNumber = 1;
-const MAPS = { neon:'Neon Şehir', desert:'Çöl', ice:'Buzul', space:'Uzay' };
-let mapId = 'neon';
-let seriesLength = 3;
-let seriesWins = {};
-let arenaEvent = { id:'normal', title:'Normal tempo', endsAt:0 };
-let nextArenaEventAt = 0;
-let bullets = [];
-let gems = [];
-let hazards = [];
-let ball = null;
-let lastTick = Date.now();
-let lastSurvivalPoint = 0;
-let survivalLoot = [];
-let survivalNextHazardAt = 0;
-let survivalNextLootAt = 0;
-let survivalStartedAt = 0;
-let survivalHunterSpawned = false;
-let survivalWave = 1;
-let bombHolderId = null;
-let bombExplodesAt = 0;
-const FLOOR_COLS = 12, FLOOR_ROWS = 8;
-let floorTiles = [];
-let floorScoreAt = 0;
-
-function random(min, max) { return min + Math.random() * (max - min); }
-function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
-function cleanName(value) {
-  return String(value || 'Oyuncu').replace(/[<>\u0000-\u001f]/g, '').trim().slice(0, 14) || 'Oyuncu';
-}
-function makeGem() {
-  return { id: crypto.randomUUID(), x: random(70, WORLD.width - 70), y: random(70, WORLD.height - 70), kind: Math.random() < .16 ? 'bonus' : 'normal', pulse: random(0, Math.PI * 2) };
-}
-function makeHazard(hunter = false, multiplier = 1) {
-  const angle = random(0, Math.PI * 2), speed = (hunter ? random(118, 145) : random(98, 188)) * multiplier;
-  return { id: crypto.randomUUID(), x: random(70, WORLD.width - 70), y: random(70, WORLD.height - 70), vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: hunter ? 29 : random(16, 24), phase: random(0, Math.PI * 2), hunter };
-}
-function makeSurvivalLoot() {
-  return { id: crypto.randomUUID(), x: random(80, WORLD.width - 80), y: random(80, WORLD.height - 80) };
-}
-function makeFloor() {
-  floorTiles = [];
-  for (let row = 0; row < FLOOR_ROWS; row++) for (let col = 0; col < FLOOR_COLS; col++) {
-    floorTiles.push({ col, row, alive: true, crackAt: 0 });
-  }
-}
-function floorIndexAt(x, y) {
-  const col = clamp(Math.floor(x / (WORLD.width / FLOOR_COLS)), 0, FLOOR_COLS - 1);
-  const row = clamp(Math.floor(y / (WORLD.height / FLOOR_ROWS)), 0, FLOOR_ROWS - 1);
-  return row * FLOOR_COLS + col;
-}
-function randomSafeFloorSpot() {
-  const safe = floorTiles.filter(tile => tile.alive);
-  if (!safe.length) return null;
-  const tile = safe[Math.floor(Math.random() * safe.length)];
-  return { x: (tile.col + .5) * (WORLD.width / FLOOR_COLS), y: (tile.row + .5) * (WORLD.height / FLOOR_ROWS) };
-}
-function spawnFor(slot) {
-  if (modeId === 'sumo') {
-    const sumoPoints = [
-      { x: 480, y: 430, a: -Math.PI/2 },
-      { x: 650, y: 300, a: Math.PI },
-      { x: 480, y: 170, a: Math.PI/2 },
-      { x: 310, y: 300, a: 0 },
-    ];
-    return sumoPoints[slot % 4];
-  }
-  const points = [
-    { x: 165, y: 150, a: .2 },
-    { x: 795, y: 150, a: 2.9 },
-    { x: 165, y: 450, a: -.2 },
-    { x: 795, y: 450, a: -2.9 },
-  ];
-  return points[slot % 4];
-}
-function resetPlayer(p) {
-  const s = spawnFor(p.slot);
-  p.x = s.x + random(-18, 18); p.y = s.y + random(-18, 18);
-  p.vx = 0; p.vy = 0; p.angle = s.a;
-  p.hp = 3; p.lives = 3; p.alive = true; p.respawnAt = 0;
-  p.invulnerableUntil = Date.now() + 1200;
-  p.powerUntil = 0; p.controlMs = 0; p.score = 0; p.kos = 0; p.deaths = 0; p.hits = 0; p.goals = 0; p.gems = 0;
-  p.input = { x: 0, y: 0, action: false }; p.actionWasDown = false; p.actionReadyAt = 0;
-}
-function cleanSkin(value) { return ['tooth', 'hair', 'pink', 'ghost', 'alien', 'wizard'].includes(value) ? value : 'tooth'; }
-function createPlayer(name, skin) {
-  const slot = [0, 1, 2, 3].find(n => ![...players.values()].some(p => p.slot === n));
-  if (slot === undefined) return null;
-  const id = crypto.randomUUID();
-  const p = { id, slot, name: cleanName(name), skin: cleanSkin(skin), color: COLORS[slot], x: 0, y: 0, vx: 0, vy: 0, angle: 0, score: 0, hp: 3, lives: 3, alive: true, respawnAt: 0, invulnerableUntil: 0, powerUntil: 0, controlMs: 0, kos: 0, deaths: 0, hits: 0, goals: 0, gems: 0, lastHitBy: null, input: { x: 0, y: 0, action: false }, actionWasDown: false, actionReadyAt: 0, lastSeen: Date.now(), lastInputAt: Date.now() };
-  resetPlayer(p);
-  players.set(id, p);
-  if (!hostId) hostId = id;
-  return { token: id, player: { id, name: p.name, color: p.color, skin: p.skin }, isHost: id === hostId };
-}
-function resetWorld() {
-  bullets = [];
-  gems = [];
-  hazards = [];
-  survivalLoot = [];
-  floorTiles = [];
-  ball = null;
-  bombHolderId = null;
-  bombExplodesAt = 0;
-  const now = Date.now();
-  for (const p of players.values()) {
-    resetPlayer(p);
-    if (modeId === 'tank') p.hp = 2;
-    if (['sumo', 'survival', 'hotpotato', 'floor'].includes(modeId)) p.lives = 2;
-  }
-  if (modeId === 'gems') for (let i = 0; i < 14; i++) gems.push(makeGem());
-  if (modeId === 'survival') {
-    for (let i = 0; i < 12; i++) hazards.push(makeHazard(false, 1));
-    survivalStartedAt = now; survivalNextHazardAt = now + 5200; survivalNextLootAt = now + 4200;
-    survivalHunterSpawned = false; survivalWave = 1;
-  }
-  if (modeId === 'soccer') ball = { x: WORLD.width / 2, y: WORLD.height / 2, vx: 0, vy: 0, lastKickBy: null, spin: 0 };
-  if (modeId === 'hotpotato') {
-    const alive = [...players.values()].filter(p => p.alive);
-    bombHolderId = alive[Math.floor(Math.random() * alive.length)]?.id || null;
-    bombExplodesAt = now + 7200;
-  }
-  if (modeId === 'floor') { makeFloor(); floorScoreAt = now + 1800; }
-  lastSurvivalPoint = now;
-}
-function changePhaseToLobby() {
-  phase = 'lobby'; roundEndsAt = null; countdownEndsAt = null; resultText = '';
-  bullets = []; gems = []; hazards = []; survivalLoot = []; floorTiles = []; ball = null;
-  bombHolderId = null; bombExplodesAt = 0;
-  for (const p of players.values()) resetPlayer(p);
-}
-function beginCountdown() {
-  if (players.size < 2) return { error: 'Başlamak için en az 2 oyuncu gerekli.' };
-  if (phase === 'running' || phase === 'countdown') return { error: 'Tur zaten başladı.' };
-  resetWorld();
-  arenaEvent = {id:'normal',title:'Normal tempo',endsAt:0}; nextArenaEventAt = Date.now()+9000;
-  phase = 'countdown';
-  countdownEndsAt = Date.now() + 3200;
-  resultText = '';
-  return { ok: true };
-}
-function finishRound(reason) {
-  const list = [...players.values()];
-  if (!list.length) resultText = 'Tur sona erdi.';
-  else {
-    const ordered = [...list].sort((a, b) => b.score - a.score || b.kos - a.kos);
-    const top = ordered[0];
-    const tied = ordered.filter(p => p.score === top.score);
-    resultText = tied.length > 1 ? `Berabere! ${top.score} puan` : `${top.name} kazandı! ${top.score} puan`;
-  }
-  if (reason === 'target') resultText += ' · Hedefe ilk ulaşan!';
-  if (reason === 'last') resultText += ' · Son kalan kazandı!';
-  const winner = [...list].sort((a,b)=>b.score-a.score || b.kos-a.kos)[0];
-  if (winner) { seriesWins[winner.id] = (seriesWins[winner.id] || 0) + 1; const wins = seriesWins[winner.id]; resultText += ` · Seri: ${wins}/${Math.ceil(seriesLength/2)} galibiyet`; if (wins >= Math.ceil(seriesLength/2)) resultText += ' · SERİ ŞAMPİYONU!'; }
-  phase = 'finished'; roundEndsAt = null; countdownEndsAt = null;
-}
-function checkTarget() {
-  const m = MODES[modeId];
-  if (m.target >= 999) return;
-  const winner = [...players.values()].find(p => p.score >= m.target);
-  if (winner) finishRound('target');
-}
-function cooldownFor(p, ms) { const factor = p.skin === 'alien' ? .88 : p.skin === 'wizard' ? .92 : 1; return Math.round(ms * factor); }
-function powerFor(p, ms) { return Math.round(ms * (p.skin === 'tooth' ? 1.12 : p.skin === 'pink' ? 1.08 : 1)); }
-function actionReady(p, now) {
-  const down = Boolean(p.input.action);
-  const pressed = down && !p.actionWasDown;
-  p.actionWasDown = down;
-  if (pressed && now >= p.actionReadyAt && p.alive) return true;
-  return false;
-}
-function keepInBounds(p, margin = 22) {
-  if (p.x < margin) { p.x = margin; p.vx = Math.abs(p.vx) * .25; }
-  if (p.x > WORLD.width - margin) { p.x = WORLD.width - margin; p.vx = -Math.abs(p.vx) * .25; }
-  if (p.y < margin) { p.y = margin; p.vy = Math.abs(p.vy) * .25; }
-  if (p.y > WORLD.height - margin) { p.y = WORLD.height - margin; p.vy = -Math.abs(p.vy) * .25; }
-}
-function movePlayer(p, dt, speed, acceleration = 10) {
-  if (!p.alive || Date.now() < p.invulnerableUntil) return;
-  const ix = Number(p.input.x) || 0, iy = Number(p.input.y) || 0;
-  const len = Math.hypot(ix, iy);
-  const nx = len > 0 ? ix / len : 0, ny = len > 0 ? iy / len : 0;
-  if (len > 0.08) p.angle = Math.atan2(ny, nx);
-  const passiveSpeed = p.skin === 'hair' ? 1.07 : p.skin === 'ghost' ? 1.035 : p.skin === 'wizard' ? 1.025 : 1;
-  const eventSpeed = arenaEvent.id === 'turbo' ? 1.18 : arenaEvent.id === 'slow' ? .86 : 1;
-  const finalSpeed = speed * passiveSpeed * eventSpeed;
-  const targetVx = nx * finalSpeed, targetVy = ny * finalSpeed;
-  const blend = Math.min(1, acceleration * dt);
-  p.vx += (targetVx - p.vx) * blend;
-  p.vy += (targetVy - p.vy) * blend;
-  if (len < .08) { p.vx *= Math.pow(.045, dt); p.vy *= Math.pow(.045, dt); }
-  p.x += p.vx * dt; p.y += p.vy * dt;
-}
-function respawnPlayers(now) {
-  for (const p of players.values()) {
-    if (!p.alive && p.respawnAt && now >= p.respawnAt && p.lives > 0) {
-      const slot = p.slot; const s = spawnFor(slot);
-      p.x = s.x + random(-28, 28); p.y = s.y + random(-28, 28);
-      p.vx = 0; p.vy = 0; p.alive = true; p.hp = 3; p.respawnAt = 0; p.invulnerableUntil = now + 1600;
-    }
-  }
-}
-function collidePlayers(pushScale = 1) {
-  const list = [...players.values()].filter(p => p.alive);
-  for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
-    const a = list[i], b = list[j];
-    let dx = b.x - a.x, dy = b.y - a.y;
-    let d = Math.hypot(dx, dy) || .001;
-    const min = 43;
-    if (d >= min) continue;
-    const nx = dx / d, ny = dy / d, overlap = min - d;
-    a.x -= nx * overlap * .5; a.y -= ny * overlap * .5;
-    b.x += nx * overlap * .5; b.y += ny * overlap * .5;
-    let eventPush = arenaEvent.id === 'brawl' ? 1.32 : 1;
-    let strength = (115 + (a.powerUntil > Date.now() ? 250 : 0) + (b.powerUntil > Date.now() ? 250 : 0)) * pushScale * eventPush;
-    a.vx -= nx * strength * .08; a.vy -= ny * strength * .08;
-    b.vx += nx * strength * .08; b.vy += ny * strength * .08;
-    const now = Date.now();
-    if (a.powerUntil > now && b.invulnerableUntil < now) { b.vx += nx * 250; b.vy += ny * 250; b.lastHitBy = a.id; }
-    if (b.powerUntil > now && a.invulnerableUntil < now) { a.vx -= nx * 250; a.vy -= ny * 250; a.lastHitBy = b.id; }
-  }
-}
-function dropOut(p, now) {
-  if (!p.alive) return;
-  p.alive = false; p.deaths++; p.lives = Math.max(0, p.lives - 1); p.respawnAt = p.lives > 0 ? now + 1500 : 0;
-  const attacker = p.lastHitBy && players.get(p.lastHitBy);
-  if (attacker && attacker.id !== p.id) { attacker.score++; attacker.kos++; }
-  p.lastHitBy = null;
-}
-function tickTank(dt, now) {
-  for (const p of players.values()) {
-    movePlayer(p, dt, 205, 12); keepInBounds(p);
-    if (actionReady(p, now)) {
-      p.actionReadyAt = now + cooldownFor(p, 570);
-      const speed = 570;
-      bullets.push({ id: crypto.randomUUID(), owner: p.id, x: p.x + Math.cos(p.angle) * 29, y: p.y + Math.sin(p.angle) * 29, vx: Math.cos(p.angle) * speed, vy: Math.sin(p.angle) * speed, life: 1.45, r: 7 });
-    }
-  }
-  for (let i = bullets.length - 1; i >= 0; i--) {
-    const b = bullets[i]; b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
-    if (b.life <= 0 || b.x < 0 || b.x > WORLD.width || b.y < 0 || b.y > WORLD.height) { bullets.splice(i, 1); continue; }
-    for (const p of players.values()) {
-      if (p.id === b.owner || !p.alive || now < p.invulnerableUntil) continue;
-      if (Math.hypot(p.x - b.x, p.y - b.y) < 25) {
-        p.hp--; const shooterForStat = players.get(b.owner); if (shooterForStat) shooterForStat.hits++; p.vx += b.vx * .16; p.vy += b.vy * .16; p.lastHitBy = b.owner;
-        if (p.hp <= 0) {
-          const attacker = players.get(b.owner); if (attacker) { attacker.score++; attacker.kos++; }
-          p.deaths++; p.hp = 2; p.x = spawnFor(p.slot).x; p.y = spawnFor(p.slot).y; p.vx = 0; p.vy = 0; p.invulnerableUntil = now + 2200;
-        }
-        bullets.splice(i, 1); break;
-      }
-    }
-  }
-}
-function tickSumo(dt, now) {
-  for (const p of players.values()) {
-    if (p.lives <= 0) { p.alive = false; continue; }
-    movePlayer(p, dt, 190, 9);
-    if (actionReady(p, now)) { p.actionReadyAt = now + cooldownFor(p, 1850); p.powerUntil = now + powerFor(p, 380); }
-  }
-  collidePlayers(1.25);
-  const cx = WORLD.width / 2, cy = WORLD.height / 2, radius = 236;
-  for (const p of players.values()) {
-    if (!p.alive) continue;
-    const d = Math.hypot(p.x - cx, p.y - cy);
-    if (d > radius + 21) dropOut(p, now);
-    else {
-      if (d > radius - 25) { const k = (d - (radius - 25)) / 46; p.vx -= ((p.x - cx) / (d || 1)) * 190 * k * dt; p.vy -= ((p.y - cy) / (d || 1)) * 190 * k * dt; }
-    }
-  }
-  respawnPlayers(now);
-}
-function tickPush(dt, now) {
-  for (const p of players.values()) {
-    movePlayer(p, dt, 220, 12); keepInBounds(p);
-    if (actionReady(p, now)) {
-      p.actionReadyAt = now + cooldownFor(p, 2450); p.powerUntil = now + powerFor(p, 260);
-      for (const other of players.values()) {
-        if (other.id === p.id || !other.alive) continue;
-        const dx = other.x - p.x, dy = other.y - p.y, d = Math.hypot(dx, dy);
-        if (d < 155 && d > 0) { const force = 680 * (1 - d / 155); other.vx += dx / d * force; other.vy += dy / d * force; other.lastHitBy = p.id; }
-      }
-    }
-  }
-  collidePlayers(.95);
-  const cx = WORLD.width / 2, cy = WORLD.height / 2, r = 94;
-  for (const p of players.values()) if (p.alive && Math.hypot(p.x - cx, p.y - cy) < r) p.controlMs += dt * 1000;
-  for (const p of players.values()) {
-    const points = Math.floor(p.controlMs / 1000);
-    if (points > p.score) p.score = points;
-  }
-}
-function tickSoccer(dt, now) {
-  for (const p of players.values()) {
-    movePlayer(p, dt, 225, 11); keepInBounds(p, 30);
-    if (actionReady(p, now)) {
-      p.actionReadyAt = now + cooldownFor(p, 580);
-      const dx = ball.x - p.x, dy = ball.y - p.y, d = Math.hypot(dx, dy);
-      if (d < 90) {
-        let ax = Math.cos(p.angle), ay = Math.sin(p.angle);
-        if (Math.hypot(p.input.x, p.input.y) < .1 && d > 1) { ax = dx / d; ay = dy / d; }
-        ball.vx += ax * 620; ball.vy += ay * 620; ball.lastKickBy = p.id;
-      }
-    }
-  }
-  collidePlayers(.55);
-  ball.x += ball.vx * dt; ball.y += ball.vy * dt;
-  const damp = Math.pow(.32, dt); ball.vx *= damp; ball.vy *= damp; ball.spin += dt * 5;
-  const goalHalf = 70;
-  let scoring = null, conceded = null;
-  if (ball.x < 15 && Math.abs(ball.y - WORLD.height / 2) < goalHalf) { conceded = 0; scoring = ball.lastKickBy; }
-  else if (ball.x > WORLD.width - 15 && Math.abs(ball.y - WORLD.height / 2) < goalHalf) { conceded = 1; scoring = ball.lastKickBy; }
-  else if (ball.y < 15 && Math.abs(ball.x - WORLD.width / 2) < goalHalf) { conceded = 2; scoring = ball.lastKickBy; }
-  else if (ball.y > WORLD.height - 15 && Math.abs(ball.x - WORLD.width / 2) < goalHalf) { conceded = 3; scoring = ball.lastKickBy; }
-  if (conceded !== null) {
-    const shooter = scoring && players.get(scoring);
-    const goalkeeper = [...players.values()].find(p => p.slot === conceded);
-    if (shooter) { shooter.score += shooter === goalkeeper ? -1 : 1; if (shooter !== goalkeeper) shooter.goals++; }
-    ball.x = WORLD.width / 2; ball.y = WORLD.height / 2; ball.vx = 0; ball.vy = 0; ball.lastKickBy = null;
-  }
-  if (ball.x < 16 || ball.x > WORLD.width - 16) { ball.vx *= -.7; ball.x = clamp(ball.x, 16, WORLD.width - 16); }
-  if (ball.y < 16 || ball.y > WORLD.height - 16) { ball.vy *= -.7; ball.y = clamp(ball.y, 16, WORLD.height - 16); }
-}
-function tickGems(dt, now) {
-  for (const p of players.values()) {
-    const dash = p.powerUntil > now;
-    movePlayer(p, dt, dash ? 350 : 205, 12); keepInBounds(p);
-    if (actionReady(p, now)) { p.actionReadyAt = now + cooldownFor(p, 1750); p.powerUntil = now + powerFor(p, 330); }
-  }
-  for (let i = gems.length - 1; i >= 0; i--) {
-    const g = gems[i];
-    for (const p of players.values()) {
-      if (!p.alive) continue;
-      if (Math.hypot(p.x - g.x, p.y - g.y) < 29) {
-        p.score += g.kind === 'bonus' ? 3 : 1; p.gems++;
-        gems.splice(i, 1); gems.push(makeGem()); break;
-      }
-    }
-  }
-}
-function tickSurvival(dt, now) {
-  survivalWave = 1 + Math.floor((now - survivalStartedAt) / 15000);
-  for (const p of players.values()) {
-    if (!p.alive) continue;
-    movePlayer(p, dt, p.powerUntil > now ? 370 : 220, 13); keepInBounds(p);
-    if (actionReady(p, now)) {
-      p.actionReadyAt = now + cooldownFor(p, 1850); p.powerUntil = now + powerFor(p, 430);
-    }
-  }
-  if (now >= survivalNextHazardAt && hazards.length < 18) {
-    const multiplier = 1 + Math.min(.35, (survivalWave - 1) * .06);
-    hazards.push(makeHazard(false, multiplier));
-    survivalNextHazardAt = now + Math.max(3400, 5600 - survivalWave * 180);
-  }
-  if (!survivalHunterSpawned && now - survivalStartedAt >= 20000) {
-    hazards.push(makeHazard(true, 1)); survivalHunterSpawned = true;
-  }
-  for (const h of hazards) {
-    if (h.hunter) {
-      let target = null, best = Infinity;
-      for (const p of players.values()) if (p.alive) {
-        const d2 = (p.x - h.x) ** 2 + (p.y - h.y) ** 2;
-        if (d2 < best) { best = d2; target = p; }
-      }
-      if (target) {
-        const dx = target.x - h.x, dy = target.y - h.y, d = Math.hypot(dx, dy) || 1, speed = 138 + Math.min(35, survivalWave * 3);
-        h.vx += (dx / d * speed - h.vx) * Math.min(1, dt * 1.8);
-        h.vy += (dy / d * speed - h.vy) * Math.min(1, dt * 1.8);
-      }
-    }
-    h.x += h.vx * dt; h.y += h.vy * dt; h.phase += dt * 4;
-    if (h.x < h.r || h.x > WORLD.width - h.r) h.vx *= -1;
-    if (h.y < h.r || h.y > WORLD.height - h.r) h.vy *= -1;
-    h.x = clamp(h.x, h.r, WORLD.width - h.r); h.y = clamp(h.y, h.r, WORLD.height - h.r);
-    for (const p of players.values()) {
-      if (!p.alive || now < p.invulnerableUntil || p.powerUntil > now) continue;
-      if (Math.hypot(p.x - h.x, p.y - h.y) < h.r + 17) {
-        p.lives--; p.deaths++; p.invulnerableUntil = now + 1450;
-        p.vx += (p.x - h.x) * 4; p.vy += (p.y - h.y) * 4;
-        if (p.lives <= 0) p.alive = false;
-        else { const s = spawnFor(p.slot); p.x = s.x; p.y = s.y; p.vx = 0; p.vy = 0; }
-      }
-    }
-  }
-  if (now >= survivalNextLootAt && survivalLoot.length < 2) {
-    survivalLoot.push(makeSurvivalLoot()); survivalNextLootAt = now + 8500;
-  }
-  for (let i = survivalLoot.length - 1; i >= 0; i--) {
-    const loot = survivalLoot[i];
-    for (const p of players.values()) if (p.alive && Math.hypot(p.x - loot.x, p.y - loot.y) < 31) {
-      p.score += 4; p.lives = Math.min(2, p.lives + 1); survivalLoot.splice(i, 1); break;
-    }
-  }
-  if (now - lastSurvivalPoint >= 1000) {
-    lastSurvivalPoint = now;
-    for (const p of players.values()) if (p.alive) p.score++;
-  }
-}
-function tickHotPotato(dt, now) {
-  for (const p of players.values()) {
-    if (!p.alive) continue;
-    movePlayer(p, dt, p.powerUntil > now ? 300 : 220, 12); keepInBounds(p);
-    if (actionReady(p, now)) {
-      p.actionReadyAt = now + cooldownFor(p, 720);
-      if (p.id === bombHolderId) {
-        let nearest = null, nearestDistance = 145;
-        for (const other of players.values()) if (other.alive && other.id !== p.id) {
-          const d = Math.hypot(other.x - p.x, other.y - p.y);
-          if (d < nearestDistance) { nearestDistance = d; nearest = other; }
-        }
-        if (nearest) { bombHolderId = nearest.id; p.score++; p.powerUntil = now + powerFor(p, 180); }
-        else { p.powerUntil = now + powerFor(p, 280); p.vx += Math.cos(p.angle) * 150; p.vy += Math.sin(p.angle) * 150; }
-      } else { p.powerUntil = now + powerFor(p, 220); }
-    }
-  }
-  let holder = players.get(bombHolderId);
-  if (!holder || !holder.alive) {
-    const alive = [...players.values()].filter(p => p.alive);
-    bombHolderId = alive.length ? alive[Math.floor(Math.random() * alive.length)].id : null;
-    bombExplodesAt = now + 6200;
-  }
-  if (bombHolderId && now >= bombExplodesAt) {
-    const victim = players.get(bombHolderId);
-    if (victim && victim.alive) {
-      victim.lives--; victim.deaths++; victim.invulnerableUntil = now + 1300;
-      if (victim.lives <= 0) victim.alive = false;
-      else { const s = spawnFor(victim.slot); victim.x = s.x; victim.y = s.y; victim.vx = 0; victim.vy = 0; }
-      for (const p of players.values()) if (p.alive && p.id !== victim.id) p.score++;
-    }
-    const alive = [...players.values()].filter(p => p.alive);
-    bombHolderId = alive.length ? alive[Math.floor(Math.random() * alive.length)].id : null;
-    bombExplodesAt = now + random(5300, 7200);
-  }
-}
-function loseFloorLife(p, now) {
-  p.lives--; p.deaths++; p.invulnerableUntil = now + 850;
-  if (p.lives <= 0) { p.alive = false; return; }
-  const spot = randomSafeFloorSpot();
-  if (!spot) { p.alive = false; p.lives = 0; return; }
-  p.x = spot.x; p.y = spot.y; p.vx = 0; p.vy = 0;
-  const tile = floorTiles[floorIndexAt(p.x, p.y)];
-  if (tile) tile.crackAt = 0;
-}
-function tickFloor(dt, now) {
-  for (const p of players.values()) {
-    if (!p.alive) continue;
-    movePlayer(p, dt, p.powerUntil > now ? 360 : 235, 13); keepInBounds(p, 12);
-    if (actionReady(p, now)) { p.actionReadyAt = now + cooldownFor(p, 1450); p.powerUntil = now + powerFor(p, 260); }
-    const tile = floorTiles[floorIndexAt(p.x, p.y)];
-    if (!tile || !tile.alive) { loseFloorLife(p, now); continue; }
-    if (!tile.crackAt) tile.crackAt = now + 680;
-  }
-  for (const tile of floorTiles) if (tile.alive && tile.crackAt && now >= tile.crackAt) {
-    tile.alive = false;
-    for (const p of players.values()) if (p.alive && floorIndexAt(p.x, p.y) === tile.row * FLOOR_COLS + tile.col) loseFloorLife(p, now);
-  }
-  if (now >= floorScoreAt) {
-    floorScoreAt = now + 1800;
-    for (const p of players.values()) if (p.alive) p.score++;
-  }
-}
-function finishIfLastAlive() {
-  const alive = [...players.values()].filter(p => p.alive);
-  if (alive.length <= 1 && players.size >= 2) finishRound('last');
-}
-function tick() {
-  const now = Date.now();
-  const dt = Math.min(.05, Math.max(0, (now - lastTick) / 1000));
-  lastTick = now;
-  for (const [id, p] of players) {
-    if (now - p.lastSeen > 20000) {
-      players.delete(id);
-      if (hostId === id) hostId = players.size ? players.keys().next().value : null;
-    }
-    if (now - p.lastInputAt > 500) p.input = { x: 0, y: 0, action: false };
-  }
-  if (!players.size && ROOM_CODE) { ROOM_CODE = null; changePhaseToLobby(); }
-  if (phase === 'countdown') {
-    if (players.size < 2) { phase = 'lobby'; countdownEndsAt = null; resultText = 'Başlamak için en az 2 oyuncu gerekli.'; }
-    else if (now >= countdownEndsAt) { phase = 'running'; roundEndsAt = now + MODES[modeId].duration * 1000; }
-    return;
-  }
-  if (phase !== 'running') return;
-  if (!nextArenaEventAt || now >= nextArenaEventAt) { const events=[{id:'normal',title:'Normal tempo'},{id:'turbo',title:'Herkes hızlandı!'},{id:'slow',title:'Ağır çekim!'},{id:'bonus',title:'Çılgın arena!'}]; arenaEvent=events[Math.floor(Math.random()*events.length)]; arenaEvent.endsAt=now+14000; nextArenaEventAt=now+14000; }
-  if (modeId === 'tank') tickTank(dt, now);
-  else if (modeId === 'sumo') tickSumo(dt, now);
-  else if (modeId === 'push') tickPush(dt, now);
-  else if (modeId === 'soccer') tickSoccer(dt, now);
-  else if (modeId === 'gems') tickGems(dt, now);
-  else if (modeId === 'survival') tickSurvival(dt, now);
-  else if (modeId === 'hotpotato') tickHotPotato(dt, now);
-  else if (modeId === 'floor') tickFloor(dt, now);
-  if (phase !== 'running') return;
-  if (['sumo', 'survival', 'hotpotato', 'floor'].includes(modeId)) finishIfLastAlive();
-  if (phase !== 'running') return;
-  checkTarget();
-  if (phase === 'running' && now >= roundEndsAt) finishRound('time');
-}
-function publicState(req) {
-  const token = req.headers['x-player-token'];
-  const self = token ? players.get(String(token)) : null;
-  const now = Date.now();
-  return {
-    world: WORLD, roomCode: self ? ROOM_CODE : null, mode: modeId, modes: MODES, phase,
-    timeLeft: phase === 'running' ? Math.max(0, roundEndsAt - now) : 0,
-    countdown: phase === 'countdown' ? Math.max(0, countdownEndsAt - now) : 0,
-    resultText, roundNumber, maxPlayers: MAX_PLAYERS, playersCount: players.size, mapId, maps: MAPS, seriesLength, seriesWins, arenaEvent: {id:arenaEvent.id,title:arenaEvent.title,timeLeft:Math.max(0,arenaEvent.endsAt-now)},
-    hostId, selfId: self ? self.id : null, isHost: Boolean(self && self.id === hostId),
-    players: [...players.values()].map(p => ({ id: p.id, name: p.name, skin: p.skin, color: p.color, slot: p.slot, x: p.x, y: p.y, angle: p.angle, vx: p.vx, vy: p.vy, score: p.score, hits:p.hits, goals:p.goals, gems:p.gems, kos:p.kos, deaths:p.deaths, seriesWins:seriesWins[p.id]||0, hp: p.hp, lives: p.lives, alive: p.alive, power: p.powerUntil > now, cooldownLeft: Math.max(0, p.actionReadyAt - now), controlMs: p.controlMs, isHost: p.id === hostId, invulnerable: p.invulnerableUntil > now })),
-    bullets: bullets.map(b => ({ x: b.x, y: b.y, r: b.r })),
-    gems: gems.map(g => ({ x: g.x, y: g.y, kind: g.kind, pulse: g.pulse })),
-    hazards: hazards.map(h => ({ x: h.x, y: h.y, r: h.r, phase: h.phase, hunter: Boolean(h.hunter) })),
-    survivalLoot: survivalLoot.map(o => ({ x: o.x, y: o.y })),
-    survivalWave,
-    bombHolderId: modeId === 'hotpotato' ? bombHolderId : null,
-    bombTimeLeft: modeId === 'hotpotato' ? Math.max(0, bombExplodesAt - now) : 0,
-    floorTiles: modeId === 'floor' ? floorTiles.map(t => ({ col: t.col, row: t.row, alive: t.alive, crackIn: t.crackAt ? Math.max(0, t.crackAt - now) : 0 })) : [],
-    ball: ball ? { x: ball.x, y: ball.y, vx: ball.vx, vy: ball.vy, spin: ball.spin } : null,
+      <section class="extras-section">
+        <h3 class="section-title">ARENA AYARLARI</h3>
+        <div class="extra-control"><label for="mapSelect">Harita</label><select id="mapSelect" class="field compact"><option value="neon">Neon Şehir</option><option value="desert">Çöl</option><option value="ice">Buzul</option><option value="space">Uzay</option></select></div>
+        <div class="extra-control"><label for="seriesSelect">Seri uzunluğu</label><select id="seriesSelect" class="field compact"><option value="3">3 maçlık seri</option><option value="5">5 maçlık seri</option></select></div>
+        <div class="host-note">Harita ve seri ayarlarını oda sahibi değiştirir.</div>
+      </section>
+      <section class="daily-section">
+        <div class="side-head"><h3 class="section-title">GÜNLÜK GÖREVLER</h3><span class="host-badge">HER GÜN YENİLENİR</span></div>
+        <div id="dailyTasks" class="daily-tasks"></div>
+      </section>
+      <section class="rules-section">
+        <h3 class="section-title" style="margin-bottom:10px">KONTROLLER</h3>
+        <div class="controls"><div class="control-line"><span>Hareket</span><span class="key">W A S D</span></div><div class="control-line"><span>Alternatif</span><span class="key">↑ ← ↓ →</span></div><div class="control-line"><span id="actionRule">Özel hareket / ateş</span><span class="key">SPACE</span></div></div>
+        <div class="mode-instructions" id="modeInstructions" style="margin-top:9px">Tankını hareket ettir ve SPACE ile rakiplerine ateş et.</div>
+      </section>
+      <button class="secondary-btn hidden" id="leaveButton">ODADAN AYRIL</button>
+    </aside>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const canvas = $('arena'), ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+  const W = canvas.width, H = canvas.height;
+  const MODE_UI = {
+    tank:{icon:'▣',action:'ATEŞ ET',instruction:'WASD ile tankını sür. SPACE ile baktığın yöne mermi ateşle. Rakiplerini 15 kez vur!',sub:'TANKINI SÜR · RAKİPLERİNİ VUR',accent:'#ffbd4a'},
+    sumo:{icon:'◉',action:'GÜÇLÜ İTİŞ',instruction:'Rakiplerine yaklaş ve onları ringin dışına gönder. SPACE kısa süreli güçlü bir itiş sağlar.',sub:'RİNGİN DIŞINA İT · 2 HAKKIN VAR',accent:'#ff6c91'},
+    push:{icon:'✹',action:'ŞOK DALGASI',instruction:'Ortadaki turkuaz platformda durarak puan kazan. SPACE yakındaki rakipleri uzağa savurur.',sub:'MERKEZİ ELE GEÇİR',accent:'#42e8d5'},
+    soccer:{icon:'⚽',action:'ŞUT ÇEK',instruction:'Topa yaklaş. Hareket ettiğin yönü hedefle; duruyorsan topa doğru şut çekmek için SPACE kullan.',sub:'TOPU KAP · GOLÜ AT',accent:'#76b8ff'},
+    gems:{icon:'✧',action:'DEPAR',instruction:'Haritadaki mor elmasları topla. Büyük altın elmaslar 3 puan kazandırır. SPACE ile depar at.',sub:'ELMASLARI TOPLA',accent:'#a98bff'},
+    survival:{icon:'☄',action:'KALKAN DEPARI',instruction:'12 meteorla başlarsın; her birkaç saniyede yenileri gelir. 20. saniyede seni kovalayan AVCl meteor çıkar. Yeşil can kristalleri +1 can ve +4 puan verir. SPACE kısa süreli kalkanlı depar sağlar. 2 canın var!',sub:'METEOR DALGASINDAN SAĞ ÇIK',accent:'#ff875e'},
+    hotpotato:{icon:'💣',action:'BOMBA PASLA',instruction:'Bomba sende iken SPACE basarak 145 birim yakınındaki rakibe pasla. Paslayacak kimse yoksa hızla kaç. Sayaç bitince bomba kimin elindeyse can kaybeder. 2 canın var!',sub:'BOMBA PATLAMADAN PASLA',accent:'#ff5b62'},
+    floor:{icon:'🧊',action:'ZIPLA',instruction:'Üzerinde durduğun karo 0,68 saniyede çatlayıp çöker. Sürekli hareket et! SPACE ile kısa kalkanlı sıçrama yap. 2 canın var; hayatta kaldıkça puan kazanırsın.',sub:'ÇÖKEN KAROLARDAN KAÇ',accent:'#70d6ff'}
   };
-}
-function sendJson(res, status, data) {
-  const body = JSON.stringify(data);
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body), 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
-  res.end(body);
-}
-function readBody(req) {
-  return new Promise((resolve, reject) => {
-    let raw = '';
-    req.on('data', chunk => { raw += chunk; if (raw.length > 12000) { reject(new Error('İstek çok büyük.')); req.destroy(); } });
-    req.on('end', () => { try { resolve(raw ? JSON.parse(raw) : {}); } catch { reject(new Error('Geçersiz istek.')); } });
-    req.on('error', reject);
+  let state = null, previousState = null, renderState = null, token = null, input = {x:0,y:0,action:false}, keys = new Set();
+  const SKIN_IDS = ['tooth','hair','pink','ghost','alien','wizard'];
+  const SKIN_NAMES = {tooth:'Çürük Dişli',hair:'Uzun Saçlı',pink:'Pembe İnsan',ghost:'Korkak Hayalet',alien:'Marslı Kafa',wizard:'BİM Çalışanı'};
+  let selectedSkin = SKIN_IDS.includes(localStorage.getItem('miniArenaSkin')) ? localStorage.getItem('miniArenaSkin') : 'tooth';
+  function setSelectedSkin(id) {
+    if (!SKIN_IDS.includes(id)) return;
+    selectedSkin = id;
+    localStorage.setItem('miniArenaSkin', id);
+    document.querySelectorAll('.skin-big-card').forEach(b => b.classList.toggle('active', b.dataset.skin === id));
+    $('selectedSkinLabel').textContent = 'Seçilen karakter: ' + SKIN_NAMES[id];
+  }
+  $('skinOptions').addEventListener('click', ev => {
+    const button = ev.target.closest('[data-skin]');
+    if (!button) return;
+    setSelectedSkin(button.dataset.skin);
+    $('skinScreen').classList.add('hidden');
+    $('joinOverlay').classList.remove('hidden');
   });
-}
-function getPlayer(req) {
-  const token = req.headers['x-player-token'];
-  const p = token ? players.get(String(token)) : null;
-  if (p) p.lastSeen = Date.now();
-  return p;
-}
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  if (req.method === 'GET' && url.pathname === '/') {
-    const html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Length': html.length, 'Cache-Control': 'no-store' });
-    return res.end(html);
-  }
-  if (req.method === 'GET' && url.pathname === '/health') return sendJson(res, 200, { ok: true, mode: 'online', roomActive: Boolean(ROOM_CODE) });
-  if (req.method === 'GET' && url.pathname === '/api/state') return sendJson(res, 200, publicState(req));
-  if (req.method === 'POST' && url.pathname === '/api/create-room') {
-    try {
-      const body = await readBody(req);
-      if (ROOM_CODE && players.size > 0) return sendJson(res, 409, { error: 'Şu anda açık bir oda var. Arkadaşların davet koduyla katılsın.' });
-      ROOM_CODE = makeRoomCode(); modeId = 'tank'; roundNumber = 1; mapId='neon'; seriesLength=3; seriesWins={}; changePhaseToLobby();
-      const created = createPlayer(body.name, body.skin);
-      if (!created) { ROOM_CODE = null; return sendJson(res, 409, { error: 'Oda oluşturulamadı.' }); }
-      return sendJson(res, 201, { ...created, code: ROOM_CODE });
-    } catch (error) { return sendJson(res, 400, { error: error.message || 'Oda oluşturulamadı.' }); }
-  }
-  if (req.method === 'POST' && url.pathname === '/api/join') {
-    try {
-      const body = await readBody(req);
-      if (!ROOM_CODE) return sendJson(res, 404, { error: 'Henüz açık bir oda yok. Önce bir oyuncu oda oluşturmalı.' });
-      if (String(body.code || '').trim().toUpperCase() !== ROOM_CODE) return sendJson(res, 403, { error: 'Davet kodu yanlış. Oda sahibinden güncel kodu iste.' });
-      if (players.size >= MAX_PLAYERS) return sendJson(res, 409, { error: 'Oda dolu. En fazla 4 kişi oynayabilir.' });
-      const created = createPlayer(body.name, body.skin);
-      if (!created) return sendJson(res, 409, { error: 'Oda dolu. En fazla 4 kişi oynayabilir.' });
-      return sendJson(res, 201, created);
-    } catch (error) { return sendJson(res, 400, { error: error.message || 'Oyuncu eklenemedi.' }); }
-  }
-  if (req.method === 'POST' && url.pathname === '/api/rejoin') {
-    try {
-      const body = await readBody(req);
-      const p = players.get(String(body.token || ''));
-      if (!p) return sendJson(res, 404, { error: 'Oyuncu oturumu bulunamadı. Yeniden katıl.' });
-      p.lastSeen = Date.now(); p.lastInputAt = Date.now();
-      return sendJson(res, 200, { ok: true, player: { id: p.id, name: p.name, color: p.color, skin: p.skin }, isHost: p.id === hostId });
-    } catch (error) { return sendJson(res, 400, { error: error.message || 'Oturum yenilenemedi.' }); }
-  }
-  if (req.method === 'POST' && ['/api/input', '/api/frame'].includes(url.pathname)) {
-    const p = getPlayer(req); if (!p) return sendJson(res, 401, { error: 'Oyuncu oturumu bulunamadı. Yeniden katıl.' });
-    try {
-      const body = await readBody(req);
-      p.input = { x: clamp(Number(body.x) || 0, -1, 1), y: clamp(Number(body.y) || 0, -1, 1), action: Boolean(body.action) };
-      if (body.skin !== undefined) p.skin = cleanSkin(body.skin);
-      p.lastInputAt = Date.now(); return sendJson(res, 200, url.pathname === '/api/frame' ? publicState(req) : { ok: true });
-    } catch (error) { return sendJson(res, 400, { error: error.message }); }
-  }
-  if (req.method === 'POST' && url.pathname === '/api/host/mode') {
-    const p = getPlayer(req); if (!p || p.id !== hostId) return sendJson(res, 403, { error: 'Modu yalnızca oda sahibi seçebilir.' });
-    if (!['lobby', 'finished'].includes(phase)) return sendJson(res, 409, { error: 'Tur sürerken mod değiştirilemez.' });
-    try {
-      const body = await readBody(req); if (!MODES[body.mode]) return sendJson(res, 400, { error: 'Geçersiz oyun modu.' });
-      modeId = body.mode; changePhaseToLobby(); roundNumber++; return sendJson(res, 200, { ok: true });
-    } catch (error) { return sendJson(res, 400, { error: error.message }); }
-  }
-  if (req.method === 'POST' && url.pathname === '/api/host/settings') {
-    const p = getPlayer(req); if (!p || p.id !== hostId) return sendJson(res,403,{error:'Ayarları yalnızca oda sahibi değiştirebilir.'});
-    if (!['lobby','finished'].includes(phase)) return sendJson(res,409,{error:'Ayarlar tur başlamadan önce değiştirilebilir.'});
-    try { const body=await readBody(req); if (body.mapId && MAPS[body.mapId]) mapId=body.mapId; if ([3,5].includes(Number(body.seriesLength))) seriesLength=Number(body.seriesLength); return sendJson(res,200,{ok:true,mapId,seriesLength}); }
-    catch(e){return sendJson(res,400,{error:e.message||'Ayar değiştirilemedi.'});}
-  }
-  if (req.method === 'POST' && url.pathname === '/api/host/start') {
-    const p = getPlayer(req); if (!p || p.id !== hostId) return sendJson(res, 403, { error: 'Oyunu yalnızca oda sahibi başlatabilir.' });
-    if (phase === 'finished') changePhaseToLobby();
-    if (phase !== 'lobby') return sendJson(res, 409, { error: 'Oyun şu anda başlatılamaz.' });
-    const result = beginCountdown(); return sendJson(res, result.error ? 409 : 200, result);
-  }
-  if (req.method === 'POST' && url.pathname === '/api/host/finish') {
-    const p = getPlayer(req);
-    if (!p || p.id !== hostId) return sendJson(res, 403, { error: 'Turu yalnızca oda sahibi bitirebilir.' });
-    if (!['running', 'countdown'].includes(phase)) return sendJson(res, 409, { error: 'Şu anda bitirilecek bir tur yok.' });
-    finishRound('manual');
-    return sendJson(res, 200, { ok: true });
-  }
-  if (req.method === 'POST' && url.pathname === '/api/host/lobby') {
-    const p = getPlayer(req); if (!p || p.id !== hostId) return sendJson(res, 403, { error: 'Bu işlemi yalnızca oda sahibi yapabilir.' });
-    changePhaseToLobby(); return sendJson(res, 200, { ok: true });
-  }
-  if (req.method === 'POST' && url.pathname === '/api/leave') {
-    const p = getPlayer(req);
-    if (p) {
-      players.delete(p.id);
-      if (hostId === p.id) hostId = players.size ? players.keys().next().value : null;
-    }
-    if (!players.size) { ROOM_CODE = null; changePhaseToLobby(); }
-    if (players.size < 2 && ['countdown', 'running'].includes(phase)) changePhaseToLobby();
-    return sendJson(res, 200, { ok: true });
-  }
-  return sendJson(res, 404, { error: 'Bulunamadı.' });
-});
+  $('skinBackButton').addEventListener('click', () => { $('skinScreen').classList.add('hidden'); $('joinOverlay').classList.remove('hidden'); });
+  $('changeSkinButton').addEventListener('click', () => $('skinScreen').classList.remove('hidden'));
+  setSelectedSkin(selectedSkin);
 
-setInterval(tick, 1000 / 30);
-function listen(port) {
-  ACTIVE_PORT = port;
-  const onError = error => {
-    server.removeListener('listening', onListening);
-    if (error.code === 'EADDRINUSE' && port < START_PORT + 20) { console.log(`Port ${port} kullanımda, ${port + 1} deneniyor...`); listen(port + 1); return; }
-    console.error('Sunucu başlatılamadı:', error.message); process.exitCode = 1;
-  };
-  const onListening = () => {
-    server.removeListener('error', onError);
-    console.log('\n  ========================================================');
-    console.log('             MINI ARENA 4 - ONLINE');
-    console.log('  ========================================================\n');
-    console.log('  SUNUCU HAZIR. ODA KODU SİTEDE OLUŞTURULUR.');
-    console.log('  Site üzerinden ODA OLUŞTUR butonuna basınca');
-    console.log('  yeni 6 karakterli davet kodu ekranda gösterilir.');
-    console.log(`\n  PORT: ${ACTIVE_PORT}`);
-    if (process.env.RENDER_EXTERNAL_URL) console.log(`  ONLINE SITE: ${process.env.RENDER_EXTERNAL_URL}`);
-    console.log('  En fazla 4 oyuncu. Tek seferde bir aktif oda.\n');
-  };
-  server.once('error', onError); server.once('listening', onListening); server.listen(port, HOST);
-}
-listen(START_PORT);
-function shutdown() { server.close(() => process.exit(0)); setTimeout(() => process.exit(1), 1200).unref(); }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+  let pollBusy = false, inputBusy = false, lastStateAt = 0, lastPollRequestAt = 0, lastFrameRequestAt = 0, lastRenderAt = 0, lastUiAt = 0, rosterSignature = '', cachedMode = null, toastTimer = null;
+  const SNAPSHOT_MS = 80, FRAME_MS = 1000 / 60; // İstemci çizimi: hedef 60 FPS
+  let snapshotDuration = SNAPSHOT_MS;
+  const staticCanvas = document.createElement('canvas'); staticCanvas.width = W; staticCanvas.height = H;
+  const staticCtx = staticCanvas.getContext('2d', { alpha: false });
+  let mobileDirections = new Set(), mobileAction = false;
+  const codeFromUrl = new URLSearchParams(location.search).get('kod');
+  if (codeFromUrl) $('codeInput').value = codeFromUrl.toUpperCase().slice(0,6);
+  if (sessionStorage.getItem('miniArenaToken')) token = sessionStorage.getItem('miniArenaToken');
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function api(path, body) {
+    const res = await fetch(path, {method: body ? 'POST' : 'GET', headers: {'Content-Type':'application/json', ...(token ? {'X-Player-Token':token} : {})}, body: body ? JSON.stringify(body) : undefined, cache:'no-store'});
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Bağlantı hatası (${res.status})`);
+    return data;
+  }
+  function showToast(message) { $('toast').textContent = message; $('toast').classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2200); }
+  function setError(message) { $('joinError').textContent = message || ''; }
+  function acceptState(next) {
+    const receivedAt = Date.now();
+    const oldState = state;
+    previousState = oldState && oldState.mode === next.mode ? oldState : next;
+    if (lastStateAt) snapshotDuration = Math.max(70, Math.min(250, receivedAt - lastStateAt));
+    state = next; lastStateAt = receivedAt;
+    if (!lastUiAt || receivedAt - lastUiAt >= 350 || !oldState || oldState.phase !== next.phase || oldState.mode !== next.mode) { updateUI(); lastUiAt = receivedAt; }
+  }
+  function makeRenderState(now) {
+    if (!state) return null;
+    if (!previousState || previousState.mode !== state.mode) return state;
+    const t = Math.max(0, Math.min(1, (now - lastStateAt) / snapshotDuration));
+    const oldPlayers = new Map((previousState.players || []).map(p => [p.id, p]));
+    const players = (state.players || []).map(p => {
+      const old = oldPlayers.get(p.id);
+      return old ? { ...p, x: old.x + (p.x-old.x)*t, y: old.y + (p.y-old.y)*t } : p;
+    });
+    let ball = state.ball;
+    if (ball && previousState.ball) ball = { ...ball, x: previousState.ball.x + (ball.x-previousState.ball.x)*t, y: previousState.ball.y + (ball.y-previousState.ball.y)*t };
+    const hazards = (state.hazards || []).map((h,i) => { const old=previousState.hazards?.[i]; return old ? { ...h, x: old.x+(h.x-old.x)*t, y: old.y+(h.y-old.y)*t } : h; });
+    return { ...state, players, ball, hazards };
+  }
+  $('copyCode').addEventListener('click', async () => {
+    const c = state?.roomCode || $('roomCode').textContent;
+    try { await navigator.clipboard.writeText(c); showToast('Davet kodu kopyalandı: ' + c); }
+    catch {
+      const temp = document.createElement('textarea'); temp.value = c; temp.style.position = 'fixed'; temp.style.opacity = '0'; document.body.appendChild(temp); temp.select();
+      try { document.execCommand('copy'); showToast('Davet kodu kopyalandı: ' + c); } catch { showToast('Davet kodun: ' + c); }
+      temp.remove();
+    }
+  });
+  $('createRoomButton').addEventListener('click', async () => {
+    setError('');
+    const button = $('createRoomButton'); button.disabled = true; button.textContent = 'ODA OLUŞTURULUYOR...';
+    try {
+      const name = $('nameInput').value.trim() || 'Oyuncu';
+      const result = await api('/api/create-room', {name, skin:selectedSkin});
+      token = result.token; sessionStorage.setItem('miniArenaToken', token);
+      $('skinScreen').classList.add('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden');
+      await pollState(); showToast('Odan hazır! Davet kodun: ' + result.code);
+    } catch (e) { setError(e.message); }
+    finally { button.disabled = false; button.textContent = 'ODA OLUŞTUR  ✦'; }
+  });
+  $('joinForm').addEventListener('submit', async ev => {
+    ev.preventDefault(); setError(''); $('joinButton').disabled = true; $('joinButton').textContent = 'BAĞLANIYOR...';
+    try {
+      const name = $('nameInput').value.trim() || 'Oyuncu';
+      const code = $('codeInput').value.trim().toUpperCase();
+      const result = await api('/api/join', {name, code, skin:selectedSkin}); token = result.token; sessionStorage.setItem('miniArenaToken', token);
+      $('skinScreen').classList.add('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden'); showToast('Arenaya katıldın!'); await pollState();
+    } catch (e) { setError(e.message); }
+    finally { $('joinButton').disabled = false; $('joinButton').textContent = 'OYUNA KATIL  →'; }
+  });
+  $('modeGrid').addEventListener('click', async ev => {
+    const btn = ev.target.closest('[data-mode]'); if (!btn || btn.disabled || !token) return;
+    try { await api('/api/host/mode', {mode:btn.dataset.mode}); await pollState(); showToast('Oyun modu değiştirildi.'); }
+    catch(e) { showToast(e.message); }
+  });
+  $('startButton').addEventListener('click', async () => {
+    if (!token) return;
+    const b = $('startButton'); b.disabled = true;
+    try { await api('/api/host/start', {}); await pollState(); }
+    catch(e) { showToast(e.message); }
+    finally { b.disabled = false; }
+  });
+  $('finishButton').addEventListener('click', async () => {
+    if (!token || !state?.isHost || !['running','countdown'].includes(state.phase)) return;
+    const b = $('finishButton'); b.disabled = true;
+    try { await api('/api/host/finish', {}); await pollState(); showToast('Tur erkenden bitirildi.'); }
+    catch(e) { showToast(e.message); }
+    finally { b.disabled = false; }
+  });
+  $('leaveButton').addEventListener('click', async () => {
+    try { if (token) await api('/api/leave', {}); } catch {}
+    token = null; sessionStorage.removeItem('miniArenaToken'); state = null; keys.clear(); input = {x:0,y:0,action:false}; $('skinScreen').classList.remove('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.add('hidden'); showToast('Odadan ayrıldın.'); pollState();
+  });
+  async function rejoin() {
+    if (!token) return;
+    try { await api('/api/rejoin', {token}); $('skinScreen').classList.add('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden'); }
+    catch { token = null; sessionStorage.removeItem('miniArenaToken'); }
+  }
+  async function pollState() {
+    if (pollBusy) return;
+    const now = Date.now(); if (!token && now - lastPollRequestAt < 1500) return;
+    lastPollRequestAt = now; pollBusy = true;
+    try {
+      const s = await api('/api/state');
+      if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('skinScreen').classList.remove('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.add('hidden'); }
+      acceptState(s);
+    } catch(e) { $('connectionText').textContent = 'Sunucu bağlantısı yok'; $('phaseLabel').textContent = 'BAĞLANTI KESİLDİ'; }
+    finally { pollBusy = false; }
+  }
+  async function sendInput() {
+    if (!token || inputBusy || document.hidden) return;
+    const now = Date.now();
+    const requestGap = state?.phase === 'running' ? 80 : 500;
+    if (now - lastFrameRequestAt < requestGap) return;
+    lastFrameRequestAt = now;
+    const x = (keys.has('KeyD') || keys.has('ArrowRight') || mobileDirections.has('right') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') || mobileDirections.has('left') ? 1 : 0);
+    const y = (keys.has('KeyS') || keys.has('ArrowDown') || mobileDirections.has('down') ? 1 : 0) - (keys.has('KeyW') || keys.has('ArrowUp') || mobileDirections.has('up') ? 1 : 0);
+    const action = keys.has('Space') || mobileAction;
+    input = {x,y,action,skin:selectedSkin}; inputBusy = true;
+    try {
+      const s = await api('/api/frame', input);
+      if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('skinScreen').classList.remove('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.add('hidden'); }
+      acceptState(s);
+    } catch { /* the slower state poll reports connection status */ }
+    finally { inputBusy = false; }
+  }
+  window.addEventListener('keydown', ev => {
+    if (ev.target && ['INPUT','TEXTAREA'].includes(ev.target.tagName)) return;
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(ev.code)) ev.preventDefault();
+    if (ev.code === 'Escape') { keys.clear(); return; }
+    keys.add(ev.code);
+  }, {passive:false});
+  window.addEventListener('keyup', ev => keys.delete(ev.code));
+  window.addEventListener('blur', () => { keys.clear(); mobileDirections.clear(); mobileAction = false; });
+  document.addEventListener('visibilitychange', () => { if(document.hidden){keys.clear();mobileDirections.clear();mobileAction=false;}else{lastRenderAt=0;if(token)pollState();} });
+  document.querySelectorAll('[data-dir]').forEach(btn => {
+    const dir = btn.dataset.dir;
+    btn.addEventListener('pointerdown', ev => { ev.preventDefault(); btn.setPointerCapture(ev.pointerId); mobileDirections.add(dir); });
+    const clear = () => mobileDirections.delete(dir);
+    btn.addEventListener('pointerup', clear); btn.addEventListener('pointercancel', clear); btn.addEventListener('lostpointercapture', clear);
+  });
+  $('mobileAction').addEventListener('pointerdown', ev => { ev.preventDefault(); mobileAction = true; });
+  ['pointerup','pointercancel','pointerleave'].forEach(name => $('mobileAction').addEventListener(name, () => mobileAction = false));
+
+  const dailyKey = 'miniArenaDaily_' + new Date().toISOString().slice(0,10);
+  let dailyProgress = JSON.parse(localStorage.getItem(dailyKey) || '{"played":0,"wins":0,"kos":0}');
+  let lastDailyRound = 0, lastDailyScores = {}, dailyFinishedRound = 0;
+  function renderDailyTasks(){
+    const tasks=[{title:'Bir maç tamamla',value:dailyProgress.played,target:1},{title:'Bir maç kazan',value:dailyProgress.wins,target:1},{title:'2 rakibi ele',value:dailyProgress.kos,target:2}];
+    $('dailyTasks').innerHTML=tasks.map(t=>`<div class="daily-task"><strong>${t.title} · ${Math.min(t.value,t.target)}/${t.target}</strong><div class="daily-progress"><i style="width:${Math.min(100,t.value/t.target*100)}%"></i></div></div>`).join('');
+  }
+  function updateDailyFromState(s){
+    if(!s || !token)return;
+    if(s.phase==='running') lastDailyRound=s.roundNumber;
+    if(s.phase==='finished' && s.roundNumber===lastDailyRound && s.roundNumber!==dailyFinishedRound && lastDailyRound){
+      dailyProgress.played++; const me=s.players.find(p=>p.id===s.selfId); const top=[...s.players].sort((a,b)=>b.score-a.score)[0]; if(me && top && me.id===top.id)dailyProgress.wins++;
+      localStorage.setItem(dailyKey,JSON.stringify(dailyProgress));dailyFinishedRound=s.roundNumber;lastDailyRound=0;renderDailyTasks();
+    }
+    const me=s.players.find(p=>p.id===s.selfId); if(me){const currentKos=me.kos||0;dailyProgress.kos+=Math.max(0,currentKos-(lastDailyScores.kos||0));lastDailyScores={kos:currentKos};localStorage.setItem(dailyKey,JSON.stringify(dailyProgress));renderDailyTasks();}
+  }
+  renderDailyTasks();
+  async function saveArenaSettings(){if(!token||!state?.isHost)return;try{await api('/api/host/settings',{mapId:$('mapSelect').value,seriesLength:Number($('seriesSelect').value)});await pollState();showToast('Arena ayarları kaydedildi.')}catch(e){showToast(e.message)}}
+  $('mapSelect').addEventListener('change',saveArenaSettings); $('seriesSelect').addEventListener('change',saveArenaSettings);
+  function updateUI() {
+    if (!state) return;
+    if (state.roomCode) $('roomCode').textContent = state.roomCode;
+    $('playerCount').textContent = `${state.playersCount} / 4`;
+    $('mapSelect').value=state.mapId||'neon'; $('seriesSelect').value=String(state.seriesLength||3); $('mapSelect').disabled=!state.isHost||!['lobby','finished'].includes(state.phase); $('seriesSelect').disabled=!state.isHost||!['lobby','finished'].includes(state.phase);
+    updateDailyFromState(state);
+    const selfPlayer=state.players.find(p=>p.id===state.selfId); $('spectatorBanner').classList.toggle('hidden',!(state.phase==='running'&&selfPlayer&&!selfPlayer.alive&&selfPlayer.lives<=0));
+    const ev=state.arenaEvent; $('arenaBanner').classList.toggle('hidden',state.phase!=='running'||!ev); $('arenaBanner').textContent=ev?`${ev.title} · ${Math.ceil((ev.timeLeft||0)/1000)}s`:'';
+    $('connectionText').textContent = 'Online sunucuya bağlı';
+    $('modeTitle').textContent = state.modes[state.mode].title.toLocaleUpperCase('tr-TR');
+    const ui = MODE_UI[state.mode];
+    $('modeIcon').textContent = ui.icon; $('modeIcon').style.color = ui.accent;
+    $('modeSub').textContent = ui.sub; $('actionRule').textContent = ui.action;
+    $('mobileActionText').textContent = ui.action;
+    $('modeInstructions').textContent = ui.instruction;
+    document.querySelectorAll('.mode-card').forEach(btn => { btn.classList.toggle('active', btn.dataset.mode === state.mode); btn.disabled = !state.isHost || !['lobby','finished'].includes(state.phase); });
+    $('hostBadge').textContent = state.isHost ? 'ODA SAHİBİ' : 'MODU ODA SAHİBİ SEÇER';
+    $('hostBadge').style.color = state.isHost ? 'var(--yellow)' : '#9cabc2';
+    $('hostControls').classList.toggle('hidden', !state.isHost && state.phase !== 'finished');
+    $('startButton').classList.toggle('hidden', !state.isHost);
+    $('finishButton').classList.toggle('hidden', !state.isHost || !['running','countdown'].includes(state.phase));
+    if (state.isHost) {
+      if (state.phase === 'finished') { $('startButton').textContent = 'YENİ TURU BAŞLAT'; $('startNote').textContent = 'Yeni turdan önce yukarıdan başka bir mod seçebilirsin.'; $('startButton').disabled = state.playersCount < 2; }
+      else if (state.phase === 'lobby') { $('startButton').textContent = state.playersCount < 2 ? '2 OYUNCU BEKLENİYOR' : 'OYUNU BAŞLAT  →'; $('startButton').disabled = state.playersCount < 2; $('startNote').textContent = 'En az 2 oyuncu katıldığında turu başlat.'; }
+      else { $('startButton').textContent = state.phase === 'countdown' ? 'BAŞLIYOR...' : 'TUR DEVAM EDİYOR'; $('startButton').disabled = true; $('startNote').textContent = 'Oyun sürerken yeni tur başlatılamaz.'; }
+    } else { $('modeNote').textContent = 'Modu oda sahibi seçer. Sen hazırsan oyun başlayınca mücadele et!'; }
+    $('modeGrid').style.opacity = ['lobby','finished'].includes(state.phase) ? '1' : '.63';
+    const roster = $('roster');
+    const nextRosterSignature = JSON.stringify(state.players.map(p => [p.id,p.name,p.color,p.skin,p.score,p.alive,p.isHost,p.id===state.selfId]));
+    if (nextRosterSignature !== rosterSignature) {
+      rosterSignature = nextRosterSignature;
+      roster.innerHTML = state.players.map(p => `<div class="player-row ${p.id === state.selfId ? 'me' : ''}"><div class="player-avatar" style="background:${p.color}">${esc(p.name.slice(0,1).toLocaleUpperCase('tr-TR'))}</div><div><div class="player-name">${esc(p.name)} ${p.id === state.selfId ? '<span style="color:#42e8d5;font-size:8px">SEN</span>' : ''}</div><div class="player-meta">${p.isHost ? '<span class="crown">★ ODA SAHİBİ</span>' : (p.alive ? 'Hazır' : 'Elendi')}</div></div><div class="player-score">${p.score}<small style="display:block;color:#9eacbf;font-size:8px">🏆 ${p.seriesWins||0}</small></div></div>`).join('');
+      for (let i = state.players.length; i < 4; i++) roster.innerHTML += `<div class="empty-player">+ Oyuncu bekleniyor</div>`;
+    }
+    const phaseLabels = {lobby:'OYUNCULAR BEKLENİYOR',countdown:'HAZIR OL!',running:'OYUN DEVAM EDİYOR',finished:'TUR BİTTİ'};
+    $('phaseLabel').textContent = phaseLabels[state.phase] || 'ONLINE ARENA';
+    $('phaseDot').style.background = state.phase === 'running' ? 'var(--mint)' : state.phase === 'finished' ? 'var(--pink)' : 'var(--yellow)';
+    $('timer').textContent = state.phase === 'countdown' ? String(Math.ceil(state.countdown/1000)) : state.phase === 'running' ? `${String(Math.floor(state.timeLeft/60000)).padStart(2,'0')}:${String(Math.floor(state.timeLeft/1000)%60).padStart(2,'0')}` : state.phase === 'finished' ? 'BİTTİ' : 'HAZIR';
+  }
+
+  function roundedRect(c,x,y,w,h,r,fill,stroke){c.beginPath();c.roundRect(x,y,w,h,r);if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.stroke()}}
+  function drawBackground(c=ctx) {
+    const map=(state&&state.mapId)||'neon';const palettes={neon:['#101e31','#0b1322'],desert:['#49311f','#201a19'],ice:['#17394b','#0b1d30'],space:['#21183f','#080d20']};const colors=palettes[map]||palettes.neon;const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,colors[0]);g.addColorStop(1,colors[1]);c.fillStyle=g;c.fillRect(0,0,W,H);
+    c.save();c.strokeStyle='#a9c8ee0d';c.lineWidth=1;for(let x=0;x<W;x+=48){c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke()}for(let y=0;y<H;y+=48){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}c.restore();
+    const glow=c.createRadialGradient(W/2,H/2,20,W/2,H/2,420);glow.addColorStop(0,'#32567816');glow.addColorStop(1,'#09101b00');c.fillStyle=glow;c.fillRect(0,0,W,H);
+    roundedRect(c,13,13,W-26,H-26,18,null,'#b5d6fb27');
+  }
+  function drawTankDecor(c=ctx){
+    c.save();c.strokeStyle='#ffbd4a38';c.lineWidth=2;c.setLineDash([8,10]);c.strokeRect(45,45,W-90,H-90);c.setLineDash([]);
+    const blocks=[[280,150,94,33],[590,150,94,33],[280,420,94,33],[590,420,94,33],[465,245,30,110]];
+    for(const [x,y,w,h] of blocks){roundedRect(c,x,y,w,h,8,'#172b3a','#ffbd4a32');c.fillStyle='#ffbd4a18';c.fillRect(x+8,y+7,w-16,4)}c.restore();
+  }
+  function drawSumo(c=ctx){
+    c.save();const cx=W/2,cy=H/2,gr=c.createRadialGradient(cx,cy,35,cx,cy,275);gr.addColorStop(0,'#41283d');gr.addColorStop(1,'#171b2c');c.fillStyle=gr;c.beginPath();c.arc(cx,cy,264,0,Math.PI*2);c.fill();c.strokeStyle='#ff6c916e';c.lineWidth=7;c.beginPath();c.arc(cx,cy,258,0,Math.PI*2);c.stroke();c.strokeStyle='#ffccd333';c.lineWidth=2;c.beginPath();c.arc(cx,cy,239,0,Math.PI*2);c.stroke();c.fillStyle='#ff6c9110';c.beginPath();c.arc(cx,cy,100,0,Math.PI*2);c.fill();c.fillStyle='#ff6c9152';c.font='900 13px Manrope';c.textAlign='center';c.fillText('SUMO RİNGİ',cx,cy+5);c.restore();
+  }
+  function drawPush(c=ctx){
+    c.save();const cx=W/2,cy=H/2;c.fillStyle='#42e8d508';c.fillRect(0,0,W,H);for(let r=160;r>=80;r-=20){c.strokeStyle=`rgba(66,232,213,${.08+(160-r)/1000})`;c.lineWidth=2;c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.stroke()}const g=c.createRadialGradient(cx,cy,10,cx,cy,118);g.addColorStop(0,'#42e8d542');g.addColorStop(1,'#42e8d505');c.fillStyle=g;c.beginPath();c.arc(cx,cy,112,0,Math.PI*2);c.fill();c.strokeStyle='#42e8d58a';c.lineWidth=3;c.setLineDash([7,6]);c.beginPath();c.arc(cx,cy,112,0,Math.PI*2);c.stroke();c.setLineDash([]);c.textAlign='center';c.font='900 15px Manrope';c.fillStyle='#42e8d5';c.fillText('KONTROL ALANI',cx,cy+5);c.restore();
+  }
+  function drawSoccer(c=ctx){
+    c.save();for(let i=0;i<8;i++){c.fillStyle=i%2?'#153e3a':'#17463e';c.fillRect(24+i*114,24,114,H-48)}c.strokeStyle='#b1f4d64d';c.lineWidth=3;c.strokeRect(24,24,W-48,H-48);c.beginPath();c.moveTo(W/2,24);c.lineTo(W/2,H-24);c.stroke();c.beginPath();c.arc(W/2,H/2,85,0,Math.PI*2);c.stroke();c.fillStyle='#76b8ff17';c.fillRect(24,H/2-88,48,176);c.fillStyle='#ff6c9117';c.fillRect(W-72,H/2-88,48,176);c.fillStyle='#a98bff17';c.fillRect(W/2-88,24,176,48);c.fillStyle='#ffbd4a17';c.fillRect(W/2-88,H-72,176,48);c.fillStyle='#d6f5e8';c.font='900 10px Manrope';c.textAlign='center';c.fillText('KALE 1',45,H/2-100);c.fillText('KALE 2',W-45,H/2-100);c.fillText('KALE 3',W/2,61);c.fillText('KALE 4',W/2,H-35);c.restore();
+  }
+  function drawFloorBase(c=staticCtx){
+    const tw=W/12, th=H/8;
+    c.save();
+    for(let row=0;row<8;row++)for(let col=0;col<12;col++){
+      const x=col*tw+3,y=row*th+3;
+      c.fillStyle=(row+col)%2?'#172b40':'#1b344c';
+      c.fillRect(x,y,tw-6,th-6);
+      c.strokeStyle='#91c7ec32';c.lineWidth=1;c.strokeRect(x,y,tw-6,th-6);
+    }
+    c.restore();
+  }
+  function rebuildStaticLayer(mode){
+    drawBackground(staticCtx);
+    if(mode==='tank')drawTankDecor(staticCtx);else if(mode==='sumo')drawSumo(staticCtx);else if(mode==='push')drawPush(staticCtx);else if(mode==='soccer')drawSoccer(staticCtx);else if(mode==='floor')drawFloorBase(staticCtx);
+    cachedMode=mode+'_'+((state&&state.mapId)||'neon');
+  }
+
+  function drawSkinCharacter(p) {
+    const skin = p.skin || (p.id === state?.selfId ? selectedSkin : 'tooth');
+    const x=p.x, y=p.y;
+    ctx.save();
+    // Body and head
+    const skinTone = skin === 'pink' ? '#ff70b7' : skin === 'ghost' ? '#baf9ff' : skin === 'alien' ? '#8be56e' : '#f0c7a7';
+    ctx.fillStyle = skin === 'tooth' ? '#a99b8c' : skin === 'hair' ? '#22232c' : skin === 'pink' ? '#ff70b7' : skin === 'ghost' ? '#a9f4ff' : skin === 'alien' ? '#6fcf58' : skin === 'wizard' ? '#ed171f' : '#f0c7a7';
+    if (skin === 'wizard') {
+      // BİM çalışanı: kırmızı polo tişört, koyu pantolon ve küçük BİM logosu.
+      ctx.fillStyle='#252a35'; ctx.beginPath(); ctx.roundRect(x-10,y+14,20,13,4); ctx.fill();
+      ctx.fillStyle='#ed171f'; ctx.beginPath();
+      ctx.moveTo(x-10,y-1); ctx.lineTo(x-17,y+3); ctx.lineTo(x-21,y+16);
+      ctx.lineTo(x-15,y+19); ctx.lineTo(x-11,y+12); ctx.lineTo(x+11,y+12);
+      ctx.lineTo(x+15,y+19); ctx.lineTo(x+21,y+16); ctx.lineTo(x+17,y+3);
+      ctx.lineTo(x+10,y-1); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.fillRect(x+3,y+3,9,5);
+      ctx.fillStyle='#ed171f'; ctx.font='bold 4px Arial'; ctx.textAlign='center'; ctx.fillText('BİM',x+7.5,y+7);
+    } else {
+      ctx.beginPath(); ctx.ellipse(x,y+12,15,13,0,0,Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = skinTone; ctx.beginPath(); ctx.arc(x,y-5,17,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
+
+    if (skin === 'hair') {
+      // Uzun, dalgalı saç: yüzün iki yanından omuzlara kadar iner.
+      ctx.fillStyle='#38251f'; ctx.strokeStyle='#17131a'; ctx.lineWidth=3; ctx.lineJoin='round';
+      ctx.beginPath();
+      ctx.moveTo(x-15,y-13);
+      ctx.quadraticCurveTo(x-31,y-31,x-17,y-42);
+      ctx.quadraticCurveTo(x-4,y-53,x+8,y-42);
+      ctx.quadraticCurveTo(x+23,y-54,x+31,y-35);
+      ctx.quadraticCurveTo(x+39,y-19,x+25,y+2);
+      ctx.lineTo(x+24,y+27); ctx.quadraticCurveTo(x+17,y+34,x+12,y+21);
+      ctx.lineTo(x+10,y+8); ctx.lineTo(x-10,y+8);
+      ctx.lineTo(x-13,y+23); ctx.quadraticCurveTo(x-22,y+34,x-25,y+19);
+      ctx.lineTo(x-25,y-2); ctx.quadraticCurveTo(x-34,y-10,x-15,y-13);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      // Saçın ön perçemi, kaşı kapatmayacak şekilde alnın üstünde kalır.
+      ctx.beginPath(); ctx.moveTo(x-15,y-15);
+      ctx.quadraticCurveTo(x-9,y-31,x+1,y-22);
+      ctx.quadraticCurveTo(x+13,y-13,x+19,y-19);
+      ctx.quadraticCurveTo(x+12,y-5,x-2,y-10);
+      ctx.quadraticCurveTo(x-11,y-8,x-15,y-15);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle=skinTone; ctx.beginPath(); ctx.arc(x,y-4,14,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
+    }
+    if (skin === 'ghost') {
+      ctx.globalAlpha = .82; ctx.fillStyle='#c8fbff'; ctx.beginPath(); ctx.arc(x,y-6,17,Math.PI,0); ctx.lineTo(x+17,y+13); ctx.lineTo(x+8,y+8); ctx.lineTo(x,y+15); ctx.lineTo(x-8,y+8); ctx.lineTo(x-17,y+13); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+    } else if (skin === 'alien') {
+      ctx.strokeStyle='#75e85e'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x-7,y-19); ctx.lineTo(x-12,y-29); ctx.moveTo(x+7,y-19); ctx.lineTo(x+12,y-29); ctx.stroke(); ctx.fillStyle='#ffef72'; ctx.beginPath(); ctx.arc(x-12,y-30,3,0,Math.PI*2); ctx.arc(x+12,y-30,3,0,Math.PI*2); ctx.fill();
+    } else if (skin === 'wizard') {
+      // BİM polo yaka ve düğme detayı.
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x-4,y+1); ctx.lineTo(x,y+6); ctx.lineTo(x+4,y+1); ctx.stroke();
+      ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(x,y+9,1,0,Math.PI*2); ctx.fill();
+    }
+    // Eyes
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(x-6,y-5,3.2,4.5,0,0,Math.PI*2); ctx.ellipse(x+6,y-5,3.2,4.5,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#172238'; ctx.beginPath(); ctx.arc(x-5,y-4,1.5,0,Math.PI*2); ctx.arc(x+7,y-4,1.5,0,Math.PI*2); ctx.fill();
+    // One thick eyebrow
+    ctx.strokeStyle='#211a1b'; ctx.lineWidth=skin === 'hair' ? 5.8 : 4.5; ctx.lineCap='round'; ctx.beginPath();
+    ctx.moveTo(x-10,y-13); ctx.quadraticCurveTo(x,y-18,x+10,y-13); ctx.stroke();
+    if (skin === 'tooth') {
+      ctx.fillStyle='#9b554f'; ctx.beginPath(); ctx.arc(x-10,y+2,2.2,0,Math.PI*2); ctx.arc(x-5,y+5,1.8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#4b2823'; ctx.fillRect(x-6,y+3,12,6);
+      ctx.fillStyle='#d9d06c'; ctx.fillRect(x-5,y+3,5,5); ctx.fillRect(x+2,y+3,4,4);
+    } else {
+      ctx.strokeStyle='#512d32'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x-4,y+5); ctx.lineTo(x+4,y+5); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawPlayer(p) {
+    if (!p.alive) { ctx.save();ctx.globalAlpha=.32;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,16,0,Math.PI*2);ctx.fill();ctx.restore();return; }
+    ctx.save();
+    if(p.invulnerable){ctx.globalAlpha=.58+.3*Math.sin(Date.now()/70)}
+    ctx.shadowColor=p.color;ctx.shadowBlur=p.power?6:2;
+    const rs=renderState || state;
+    // Seçilen oyuncu skini
+    drawSkinCharacter(p);
+    if(p.power){ctx.strokeStyle=p.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,27+Math.sin(Date.now()/45)*3,0,Math.PI*2);ctx.stroke()}
+    ctx.restore();
+    ctx.save();ctx.textAlign='center';ctx.font='bold 12px Manrope';ctx.fillStyle='#eaf3ff';ctx.shadowColor='#000';ctx.shadowBlur=5;ctx.fillText(p.name,p.x,p.y-28);
+    const cooldown = Math.max(0, Number(p.cooldownLeft) || 0);
+    if (cooldown > 0) {
+      const seconds = (cooldown / 1000).toFixed(1);
+      ctx.font='900 10px Manrope'; ctx.fillStyle='#ffd36c'; ctx.shadowBlur=4;
+      ctx.fillText('SPACE ' + seconds + ' sn',p.x,p.y-43);
+      ctx.shadowBlur=0; ctx.fillStyle='#111827'; ctx.fillRect(p.x-16,p.y-39,32,3);
+      ctx.fillStyle='#ffd36c'; ctx.fillRect(p.x-16,p.y-39,32*Math.max(0,Math.min(1,cooldown/2500)),3);
+    }
+    if(['survival','hotpotato','floor'].includes(rs.mode)){for(let i=0;i<p.lives;i++){ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x-10+(i*10),p.y+34,3,0,Math.PI*2);ctx.fill()}}
+    ctx.restore();
+  }
+  function drawGems(){for(const g of (renderState || state).gems||[]){ctx.save();const pulse=1+Math.sin(Date.now()/190+g.pulse)*.13;ctx.translate(g.x,g.y);ctx.scale(pulse,pulse);ctx.shadowColor=g.kind==='bonus'?'#ffbd4a':'#b18bff';ctx.shadowBlur=7;ctx.fillStyle=g.kind==='bonus'?'#ffd36c':'#b18cff';ctx.strokeStyle='#fff9';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-13);ctx.lineTo(11,-3);ctx.lineTo(7,12);ctx.lineTo(-7,12);ctx.lineTo(-11,-3);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}}
+  function drawSurvival(){
+    const rs=renderState||state;
+    for(const h of rs.hazards||[]){
+      ctx.save();ctx.fillStyle=h.hunter?'#d94eff':'#ff875e';ctx.beginPath();ctx.arc(h.x,h.y,h.r+5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=h.hunter?'#32103e':'#7e2f26';ctx.beginPath();ctx.arc(h.x,h.y,h.r-5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff0e5';ctx.beginPath();ctx.arc(h.x-4,h.y-4,h.hunter?6:4,0,Math.PI*2);ctx.fill();
+      if(h.hunter){ctx.fillStyle='#fff';ctx.font='900 9px Manrope';ctx.textAlign='center';ctx.fillText('AVCI',h.x,h.y-h.r-8)}ctx.restore();
+    }
+    for(const o of rs.survivalLoot||[]){ctx.save();ctx.fillStyle='#69f0a5';ctx.beginPath();ctx.arc(o.x,o.y,12,0,Math.PI*2);ctx.fill();ctx.fillStyle='#123c2a';ctx.fillRect(o.x-2,o.y-7,4,14);ctx.fillRect(o.x-7,o.y-2,14,4);ctx.restore()}
+    ctx.save();ctx.fillStyle='#ffbe70';ctx.font='900 13px Manrope';ctx.textAlign='left';ctx.fillText('DALGA '+(rs.survivalWave||1),28,52);ctx.restore();
+  }
+  function drawBomb(){
+    const rs=renderState||state;const p=(rs.players||[]).find(v=>v.id===rs.bombHolderId);if(!p||!p.alive)return;
+    const x=p.x,y=p.y-43;ctx.save();ctx.fillStyle='#ff4e59';ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1b1720';ctx.fillRect(x-3,y-15,6,5);ctx.strokeStyle='#ffd27c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+2,y-16);ctx.quadraticCurveTo(x+12,y-22,x+7,y-28);ctx.stroke();
+    ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='900 10px Manrope';ctx.fillText((Math.ceil((rs.bombTimeLeft||0)/1000))+'s',x,y-31);ctx.restore();
+  }
+  function drawFloorStatus(){
+    const rs=renderState||state;const tw=W/12,th=H/8;
+    for(const tile of rs.floorTiles||[]){
+      const x=tile.col*tw+3,y=tile.row*th+3;
+      if(!tile.alive){ctx.fillStyle='#050a12';ctx.fillRect(x,y,tw-6,th-6);ctx.strokeStyle='#26374a';ctx.strokeRect(x,y,tw-6,th-6);}
+      else if(tile.crackIn>0){
+        const urgent=tile.crackIn<330;ctx.fillStyle=urgent?'#a93f45':'#75503d';ctx.fillRect(x,y,tw-6,th-6);
+        ctx.strokeStyle=urgent?'#ff8d8d':'#ffc078';ctx.lineWidth=urgent?3:2;ctx.beginPath();ctx.moveTo(x+12,y+10);ctx.lineTo(x+tw*.46,y+th*.5);ctx.lineTo(x+tw-14,y+th-12);ctx.moveTo(x+tw-15,y+12);ctx.lineTo(x+tw*.53,y+th*.55);ctx.stroke();
+      }
+    }
+  }
+  function drawBall(){const rs=renderState || state;if(!rs.ball)return;const b=rs.ball;ctx.save();ctx.shadowColor='#fff';ctx.shadowBlur=3;ctx.fillStyle='#f3f7ff';ctx.beginPath();ctx.arc(b.x,b.y,16,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#26374e';ctx.lineWidth=2;ctx.beginPath();ctx.arc(b.x,b.y,9,b.spin,b.spin+Math.PI*1.3);ctx.stroke();ctx.beginPath();ctx.moveTo(b.x-12,b.y-5);ctx.lineTo(b.x+11,b.y+7);ctx.stroke();ctx.restore()}
+  function drawBullets(){for(const b of (renderState || state).bullets||[]){ctx.save();ctx.shadowColor='#ffbd4a';ctx.shadowBlur=2;ctx.fillStyle='#fff2a5';ctx.beginPath();ctx.arc(b.x,b.y,b.r||6,0,Math.PI*2);ctx.fill();ctx.restore()}}
+  function drawOverlay(){
+    const rs=renderState || state; if(!rs)return;
+    if(rs.phase==='running' && rs.selfId && (rs.players||[]).some(p=>p.id===rs.selfId&&!p.alive&&p.lives<=0)){ctx.save();ctx.textAlign='center';ctx.fillStyle='#d8c9ff';ctx.font='1000 16px Manrope';ctx.fillText('İZLEYİCİ MODU',W/2,H-28);ctx.restore();}
+    if(rs.phase==='running' && rs.mode==='hotpotato'){
+      ctx.save();ctx.textAlign='right';ctx.fillStyle='#ff7b82';ctx.font='1000 15px Manrope';ctx.fillText('BOMBA: '+(Math.ceil((rs.bombTimeLeft||0)/1000))+' sn',W-28,52);ctx.restore();
+    }
+    if(rs.phase==='lobby'){
+      ctx.save();ctx.textAlign='center';ctx.fillStyle='#eef5ff';ctx.font='900 29px Manrope';ctx.fillText(rs.playersCount<2?'ARKADAŞLARINI BEKLE':'ARENA HAZIR!',W/2,H/2-13);ctx.fillStyle='#a7b8d1';ctx.font='600 14px Manrope';ctx.fillText(rs.playersCount<2?'En az 2 oyuncu katılınca başlayabilirsiniz.':'Oda sahibi oyunu başlatabilir.',W/2,H/2+17);ctx.restore();
+    } else if(rs.phase==='countdown'){
+      const n=Math.ceil(rs.countdown/1000);ctx.save();ctx.fillStyle='#06101ccc';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.shadowColor=MODE_UI[rs.mode].accent;ctx.shadowBlur=35;ctx.fillStyle='#fff';ctx.font='1000 112px Manrope';ctx.fillText(n>0?n:'BAŞLA!',W/2,H/2+35);ctx.restore();
+    } else if(rs.phase==='finished'){
+      ctx.save();ctx.fillStyle='#06101cd9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ffbd4a';ctx.font='900 15px Manrope';ctx.fillText('TUR TAMAMLANDI',W/2,H/2-42);ctx.fillStyle='#fff';ctx.font='1000 30px Manrope';ctx.fillText(rs.resultText||'Oyun bitti',W/2,H/2+5);ctx.fillStyle='#aabbd3';ctx.font='600 13px Manrope';ctx.fillText(rs.isHost?'Rövanş için sağdaki butona bas.':'Oda sahibinin rövanşı başlatması bekleniyor.',W/2,H/2+39);
+      const ranked=[...(rs.players||[])].sort((a,b)=>b.score-a.score);ctx.textAlign='left';ctx.font='800 12px Manrope';ctx.fillStyle='#dce8ff';ranked.slice(0,4).forEach((p,i)=>ctx.fillText(`${i+1}. ${p.name}  ·  ${p.score} puan  ·  ${p.kos||0} eleme  ·  ${p.deaths||0} düşüş`,W/2-190,H/2+78+i*21));
+      const me=ranked.find(p=>p.id===rs.selfId);if(me)ctx.fillText(`İstatistiklerin: ${me.hits||0} isabet · ${me.goals||0} gol · ${me.gems||0} elmas`,W/2-190,H/2+174);ctx.restore();
+    }
+  }
+  function render(timestamp=0){
+    requestAnimationFrame(render);
+    if(document.hidden || timestamp-lastRenderAt<FRAME_MS)return;
+    lastRenderAt=timestamp;
+    renderState=makeRenderState(Date.now());
+    const cacheKey=(renderState?.mode||'menu')+'_'+(renderState?.mapId||'neon');if(cachedMode!==cacheKey)rebuildStaticLayer(renderState?.mode||'menu');
+    ctx.drawImage(staticCanvas,0,0);
+    if(renderState){
+      if(renderState.mode==='gems')drawGems();if(renderState.mode==='survival')drawSurvival();
+      if(renderState.mode==='floor')drawFloorStatus();
+      drawBullets();if(renderState.mode==='soccer')drawBall();
+      for(const p of renderState.players||[])drawPlayer(p);
+      if(renderState.mode==='hotpotato')drawBomb();
+      drawOverlay();
+    }else{ctx.save();ctx.textAlign='center';ctx.fillStyle='#7e91ad';ctx.font='800 18px Manrope';ctx.fillText('MINI ARENA 4',W/2,H/2);ctx.restore()}
+  }
+  async function init(){
+    if(token)await rejoin();
+    await pollState();
+    // Lobby: 2 updates/sec. During a match: 10 updates/sec. Never poll and send input separately.
+    setInterval(()=>{if(token)sendInput();else pollState()},50);
+    render();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
