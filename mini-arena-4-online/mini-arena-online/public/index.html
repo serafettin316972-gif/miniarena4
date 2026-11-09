@@ -96,7 +96,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   };
   let state = null, previousState = null, renderState = null, token = null, input = {x:0,y:0,action:false}, keys = new Set();
   let pollBusy = false, inputBusy = false, lastStateAt = 0, lastPollRequestAt = 0, lastFrameRequestAt = 0, lastRenderAt = 0, lastUiAt = 0, rosterSignature = '', cachedMode = null, toastTimer = null;
-  const SNAPSHOT_MS = 80, FRAME_MS = 1000 / 40;
+  const SNAPSHOT_MS = 80, FRAME_MS = 1000 / 60; // İstemci çizimi: hedef 60 FPS
   let snapshotDuration = SNAPSHOT_MS;
   const staticCanvas = document.createElement('canvas'); staticCanvas.width = W; staticCanvas.height = H;
   const staticCtx = staticCanvas.getContext('2d', { alpha: false });
