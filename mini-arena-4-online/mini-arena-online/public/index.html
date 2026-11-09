@@ -104,7 +104,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 </div>
 <main class="app">
   <header>
-    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.20</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
+    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.21</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
     <div class="header-right"><div class="lan-pill"><i class="lan-dot"></i> ONLINE ARENA</div><div class="room-pill"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="copy-btn" id="copyCode" type="button">KOPYALA</button></div></div>
   </header>
   <div class="layout">
@@ -227,7 +227,6 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 
   let pollBusy = false, inputBusy = false, lastStateAt = 0, lastPollRequestAt = 0, lastFrameRequestAt = 0, lastRenderAt = 0, lastUiAt = 0, rosterSignature = '', cachedMode = null, toastTimer = null;
   const stateHistory = [];
-  const INTERPOLATION_DELAY = 100; // 10 Hz durum paketleri arasında hareketi yumuşatır.
   const SNAPSHOT_MS = 1000 / 30, FRAME_MS = 1000 / 60; // 30 Hz sunucu verisi, 60 FPS istemci çizimi
   let snapshotDuration = SNAPSHOT_MS;
   const staticCanvas = document.createElement('canvas'); staticCanvas.width = W; staticCanvas.height = H;
@@ -252,32 +251,21 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     previousState = oldState && oldState.mode === next.mode ? oldState : next;
     if (lastStateAt) snapshotDuration = Math.max(25, Math.min(120, receivedAt - lastStateAt));
     state = next; lastStateAt = receivedAt;
-    stateHistory.push({ at: receivedAt, state: next });
-    if (stateHistory.length > 8) stateHistory.shift();
     if (!lastUiAt || receivedAt - lastUiAt >= 350 || !oldState || oldState.phase !== next.phase || oldState.mode !== next.mode) { updateUI(); lastUiAt = receivedAt; }
   }
   function makeRenderState(now) {
     if (!state) return null;
-    if (stateHistory.length < 2) return state;
-    // Son sunucu paketini anında göstermek yerine kısa bir tamponla iki paket
-    // arasında çizim yap. Böylece değişken ağ gecikmesi ekranda daha az hissedilir.
-    const targetAt = now - INTERPOLATION_DELAY;
-    let a = stateHistory[0], b = stateHistory[stateHistory.length - 1];
-    for (let i = 1; i < stateHistory.length; i++) {
-      if (stateHistory[i].at >= targetAt) { a = stateHistory[i - 1]; b = stateHistory[i]; break; }
-    }
-    if (a.state.mode !== b.state.mode || a.state.phase !== b.state.phase) return b.state;
-    const span = Math.max(1, b.at - a.at);
-    const t = Math.max(0, Math.min(1, (targetAt - a.at) / span));
-    const oldPlayers = new Map((a.state.players || []).map(p => [p.id, p]));
-    const players = (b.state.players || []).map(p => {
+    if (!previousState || previousState.mode !== state.mode) return state;
+    const t = Math.max(0, Math.min(1, (now - lastStateAt) / snapshotDuration));
+    const oldPlayers = new Map((previousState.players || []).map(p => [p.id, p]));
+    const players = (state.players || []).map(p => {
       const old = oldPlayers.get(p.id);
       return old ? { ...p, x: old.x + (p.x-old.x)*t, y: old.y + (p.y-old.y)*t } : p;
     });
-    let ball = b.state.ball;
-    if (ball && a.state.ball) ball = { ...ball, x: a.state.ball.x + (ball.x-a.state.ball.x)*t, y: a.state.ball.y + (ball.y-a.state.ball.y)*t };
-    const hazards = (b.state.hazards || []).map((h,i) => { const old=a.state.hazards?.[i]; return old ? { ...h, x: old.x+(h.x-old.x)*t, y: old.y+(h.y-old.y)*t } : h; });
-    return { ...b.state, players, ball, hazards };
+    let ball = state.ball;
+    if (ball && previousState.ball) ball = { ...ball, x: previousState.ball.x + (ball.x-previousState.ball.x)*t, y: previousState.ball.y + (ball.y-previousState.ball.y)*t };
+    const hazards = (state.hazards || []).map((h,i) => { const old=previousState.hazards?.[i]; return old ? { ...h, x: old.x+(h.x-old.x)*t, y: old.y+(h.y-old.y)*t } : h; });
+    return { ...state, players, ball, hazards };
   }
   $('copyCode').addEventListener('click', async () => {
     const c = state?.roomCode || $('roomCode').textContent;
@@ -352,8 +340,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   async function sendInput() {
     if (!token || inputBusy || document.hidden) return;
     const now = Date.now();
-    // Hareket girdisini oyun durumundan ayır: cevap beklerken ekran güncellemesi durmasın.
-    const requestGap = state?.phase === 'running' ? 50 : 500;
+    const requestGap = state?.phase === 'running' ? 33 : 500;
     if (now - lastFrameRequestAt < requestGap) return;
     lastFrameRequestAt = now;
     const x = (keys.has('KeyD') || keys.has('ArrowRight') || mobileDirections.has('right') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') || mobileDirections.has('left') ? 1 : 0);
@@ -361,8 +348,10 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     const action = keys.has('Space') || mobileAction;
     input = {x,y,action,skin:selectedSkin}; inputBusy = true;
     try {
-      await api('/api/input', input);
-    } catch { /* durum sorgusu bağlantı hatasını gösterecek */ }
+      const s = await api('/api/frame', input);
+      if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('skinScreen').classList.remove('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.add('hidden'); }
+      acceptState(s);
+    } catch { /* the slower state poll reports connection status */ }
     finally { inputBusy = false; }
   }
   window.addEventListener('keydown', ev => {
@@ -631,9 +620,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   async function init(){
     if(token)await rejoin();
     await pollState();
-    // Girdiler 20 Hz, oyun durumu 10 Hz ayrı taşınır; biri diğerinin cevabını bekletmez.
+    // Önceki kararlı iletişim düzeni: hareket ve oyun durumu aynı /api/frame isteğinde.
     setInterval(()=>{if(token)sendInput();else pollState()},16);
-    setInterval(()=>{if(token && !document.hidden)pollState()},100);
     render();
   }
   init();
