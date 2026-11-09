@@ -85,6 +85,15 @@ function randomSafeFloorSpot() {
   return { x: (tile.col + .5) * (WORLD.width / FLOOR_COLS), y: (tile.row + .5) * (WORLD.height / FLOOR_ROWS) };
 }
 function spawnFor(slot) {
+  if (modeId === 'sumo') {
+    const sumoPoints = [
+      { x: 480, y: 430, a: -Math.PI/2 },
+      { x: 650, y: 300, a: Math.PI },
+      { x: 480, y: 170, a: Math.PI/2 },
+      { x: 310, y: 300, a: 0 },
+    ];
+    return sumoPoints[slot % 4];
+  }
   const points = [
     { x: 165, y: 150, a: .2 },
     { x: 795, y: 150, a: 2.9 },
@@ -102,15 +111,16 @@ function resetPlayer(p) {
   p.powerUntil = 0; p.controlMs = 0; p.score = 0; p.kos = 0; p.deaths = 0;
   p.input = { x: 0, y: 0, action: false }; p.actionWasDown = false; p.actionReadyAt = 0;
 }
-function createPlayer(name) {
+function cleanSkin(value) { return ['tooth', 'hair', 'pink'].includes(value) ? value : 'tooth'; }
+function createPlayer(name, skin) {
   const slot = [0, 1, 2, 3].find(n => ![...players.values()].some(p => p.slot === n));
   if (slot === undefined) return null;
   const id = crypto.randomUUID();
-  const p = { id, slot, name: cleanName(name), color: COLORS[slot], x: 0, y: 0, vx: 0, vy: 0, angle: 0, score: 0, hp: 3, lives: 3, alive: true, respawnAt: 0, invulnerableUntil: 0, powerUntil: 0, controlMs: 0, kos: 0, deaths: 0, lastHitBy: null, input: { x: 0, y: 0, action: false }, actionWasDown: false, actionReadyAt: 0, lastSeen: Date.now(), lastInputAt: Date.now() };
+  const p = { id, slot, name: cleanName(name), skin: cleanSkin(skin), color: COLORS[slot], x: 0, y: 0, vx: 0, vy: 0, angle: 0, score: 0, hp: 3, lives: 3, alive: true, respawnAt: 0, invulnerableUntil: 0, powerUntil: 0, controlMs: 0, kos: 0, deaths: 0, lastHitBy: null, input: { x: 0, y: 0, action: false }, actionWasDown: false, actionReadyAt: 0, lastSeen: Date.now(), lastInputAt: Date.now() };
   resetPlayer(p);
   players.set(id, p);
   if (!hostId) hostId = id;
-  return { token: id, player: { id, name: p.name, color: p.color }, isHost: id === hostId };
+  return { token: id, player: { id, name: p.name, color: p.color, skin: p.skin }, isHost: id === hostId };
 }
 function resetWorld() {
   bullets = [];
@@ -275,7 +285,6 @@ function tickSumo(dt, now) {
     const d = Math.hypot(p.x - cx, p.y - cy);
     if (d > radius + 21) dropOut(p, now);
     else {
-      // Soft radial resistance keeps the fight centered without making ring-outs impossible.
       if (d > radius - 25) { const k = (d - (radius - 25)) / 46; p.vx -= ((p.x - cx) / (d || 1)) * 190 * k * dt; p.vy -= ((p.y - cy) / (d || 1)) * 190 * k * dt; }
     }
   }
@@ -319,7 +328,6 @@ function tickSoccer(dt, now) {
   const damp = Math.pow(.32, dt); ball.vx *= damp; ball.vy *= damp; ball.spin += dt * 5;
   const goalHalf = 70;
   let scoring = null, conceded = null;
-  // Four goals; shooting into someone else's goal gives the last kicker a point.
   if (ball.x < 15 && Math.abs(ball.y - WORLD.height / 2) < goalHalf) { conceded = 0; scoring = ball.lastKickBy; }
   else if (ball.x > WORLD.width - 15 && Math.abs(ball.y - WORLD.height / 2) < goalHalf) { conceded = 1; scoring = ball.lastKickBy; }
   else if (ball.y < 15 && Math.abs(ball.x - WORLD.width / 2) < goalHalf) { conceded = 2; scoring = ball.lastKickBy; }
@@ -357,7 +365,6 @@ function tickSurvival(dt, now) {
     movePlayer(p, dt, p.powerUntil > now ? 370 : 220, 13); keepInBounds(p);
     if (actionReady(p, now)) {
       p.actionReadyAt = now + 1850; p.powerUntil = now + 430;
-      // The dash itself grants brief protection in tickSurvival without freezing movement.
     }
   }
   if (now >= survivalNextHazardAt && hazards.length < 18) {
@@ -503,7 +510,7 @@ function tick() {
   else if (modeId === 'hotpotato') tickHotPotato(dt, now);
   else if (modeId === 'floor') tickFloor(dt, now);
   if (phase !== 'running') return;
-  if (['survival', 'hotpotato', 'floor'].includes(modeId)) finishIfLastAlive();
+  if (['sumo', 'survival', 'hotpotato', 'floor'].includes(modeId)) finishIfLastAlive();
   if (phase !== 'running') return;
   checkTarget();
   if (phase === 'running' && now >= roundEndsAt) finishRound('time');
@@ -518,7 +525,7 @@ function publicState(req) {
     countdown: phase === 'countdown' ? Math.max(0, countdownEndsAt - now) : 0,
     resultText, roundNumber, maxPlayers: MAX_PLAYERS, playersCount: players.size,
     hostId, selfId: self ? self.id : null, isHost: Boolean(self && self.id === hostId),
-    players: [...players.values()].map(p => ({ id: p.id, name: p.name, color: p.color, slot: p.slot, x: p.x, y: p.y, angle: p.angle, vx: p.vx, vy: p.vy, score: p.score, hp: p.hp, lives: p.lives, alive: p.alive, power: p.powerUntil > now, controlMs: p.controlMs, isHost: p.id === hostId, invulnerable: p.invulnerableUntil > now })),
+    players: [...players.values()].map(p => ({ id: p.id, name: p.name, skin: p.skin, color: p.color, slot: p.slot, x: p.x, y: p.y, angle: p.angle, vx: p.vx, vy: p.vy, score: p.score, hp: p.hp, lives: p.lives, alive: p.alive, power: p.powerUntil > now, controlMs: p.controlMs, isHost: p.id === hostId, invulnerable: p.invulnerableUntil > now })),
     bullets: bullets.map(b => ({ x: b.x, y: b.y, r: b.r })),
     gems: gems.map(g => ({ x: g.x, y: g.y, kind: g.kind, pulse: g.pulse })),
     hazards: hazards.map(h => ({ x: h.x, y: h.y, r: h.r, phase: h.phase, hunter: Boolean(h.hunter) })),
@@ -563,7 +570,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       if (ROOM_CODE && players.size > 0) return sendJson(res, 409, { error: 'Şu anda açık bir oda var. Arkadaşların davet koduyla katılsın.' });
       ROOM_CODE = makeRoomCode(); modeId = 'tank'; roundNumber = 1; changePhaseToLobby();
-      const created = createPlayer(body.name);
+      const created = createPlayer(body.name, body.skin);
       if (!created) { ROOM_CODE = null; return sendJson(res, 409, { error: 'Oda oluşturulamadı.' }); }
       return sendJson(res, 201, { ...created, code: ROOM_CODE });
     } catch (error) { return sendJson(res, 400, { error: error.message || 'Oda oluşturulamadı.' }); }
@@ -574,7 +581,7 @@ const server = http.createServer(async (req, res) => {
       if (!ROOM_CODE) return sendJson(res, 404, { error: 'Henüz açık bir oda yok. Önce bir oyuncu oda oluşturmalı.' });
       if (String(body.code || '').trim().toUpperCase() !== ROOM_CODE) return sendJson(res, 403, { error: 'Davet kodu yanlış. Oda sahibinden güncel kodu iste.' });
       if (players.size >= MAX_PLAYERS) return sendJson(res, 409, { error: 'Oda dolu. En fazla 4 kişi oynayabilir.' });
-      const created = createPlayer(body.name);
+      const created = createPlayer(body.name, body.skin);
       if (!created) return sendJson(res, 409, { error: 'Oda dolu. En fazla 4 kişi oynayabilir.' });
       return sendJson(res, 201, created);
     } catch (error) { return sendJson(res, 400, { error: error.message || 'Oyuncu eklenemedi.' }); }
@@ -585,7 +592,7 @@ const server = http.createServer(async (req, res) => {
       const p = players.get(String(body.token || ''));
       if (!p) return sendJson(res, 404, { error: 'Oyuncu oturumu bulunamadı. Yeniden katıl.' });
       p.lastSeen = Date.now(); p.lastInputAt = Date.now();
-      return sendJson(res, 200, { ok: true, player: { id: p.id, name: p.name, color: p.color }, isHost: p.id === hostId });
+      return sendJson(res, 200, { ok: true, player: { id: p.id, name: p.name, color: p.color, skin: p.skin }, isHost: p.id === hostId });
     } catch (error) { return sendJson(res, 400, { error: error.message || 'Oturum yenilenemedi.' }); }
   }
   if (req.method === 'POST' && ['/api/input', '/api/frame'].includes(url.pathname)) {
@@ -593,6 +600,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readBody(req);
       p.input = { x: clamp(Number(body.x) || 0, -1, 1), y: clamp(Number(body.y) || 0, -1, 1), action: Boolean(body.action) };
+      if (body.skin !== undefined) p.skin = cleanSkin(body.skin);
       p.lastInputAt = Date.now(); return sendJson(res, 200, url.pathname === '/api/frame' ? publicState(req) : { ok: true });
     } catch (error) { return sendJson(res, 400, { error: error.message }); }
   }
@@ -609,6 +617,13 @@ const server = http.createServer(async (req, res) => {
     if (phase === 'finished') changePhaseToLobby();
     if (phase !== 'lobby') return sendJson(res, 409, { error: 'Oyun şu anda başlatılamaz.' });
     const result = beginCountdown(); return sendJson(res, result.error ? 409 : 200, result);
+  }
+  if (req.method === 'POST' && url.pathname === '/api/host/finish') {
+    const p = getPlayer(req);
+    if (!p || p.id !== hostId) return sendJson(res, 403, { error: 'Turu yalnızca oda sahibi bitirebilir.' });
+    if (!['running', 'countdown'].includes(phase)) return sendJson(res, 409, { error: 'Şu anda bitirilecek bir tur yok.' });
+    finishRound('manual');
+    return sendJson(res, 200, { ok: true });
   }
   if (req.method === 'POST' && url.pathname === '/api/host/lobby') {
     const p = getPlayer(req); if (!p || p.id !== hostId) return sendJson(res, 403, { error: 'Bu işlemi yalnızca oda sahibi yapabilir.' });
@@ -651,4 +666,5 @@ function listen(port) {
 }
 listen(START_PORT);
 function shutdown() { server.close(() => process.exit(0)); setTimeout(() => process.exit(1), 1200).unref(); }
-process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
