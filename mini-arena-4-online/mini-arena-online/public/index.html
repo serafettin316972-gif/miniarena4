@@ -47,6 +47,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 @media(max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 305px}.side-panel{padding:14px}.mode-grid{gap:6px}.mode-card{min-height:94px;padding:9px}}
 @media(max-width:780px){body{padding:14px 10px 26px}.layout{grid-template-columns:1fr}.side-panel{display:grid;grid-template-columns:1fr 1fr;gap:13px}.roster-section{grid-row:span 2}.modes-section{grid-column:2}.start-section{grid-column:2}.rules-section{grid-column:1/-1}.mode-grid{grid-template-columns:repeat(3,1fr)}.mode-card{min-height:93px}.canvas-wrap{padding:8px}}
 @media(max-width:560px){header{align-items:flex-start;flex-wrap:wrap}.header-right{width:100%;justify-content:space-between}.brand h1{font-size:15px}.subtitle{font-size:8px}.lan-pill{font-size:9px}.room-pill{font-size:9px}.layout{gap:10px}.side-panel{display:flex}.mode-grid{grid-template-columns:repeat(2,1fr)}.mode-card{min-height:88px}.game-top{height:51px;padding:0 12px}.mode-title{font-size:10px}.canvas-status{top:15px;left:15px}.bottom-bar{padding:10px 12px}.mobile-pad{display:flex}.join-card{padding:22px 18px}.join-card h2{font-size:20px}}
+
+.extra-control{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;font-size:10px;color:#9caac1}.field.compact{width:58%;height:34px;margin:0;padding:0 8px;font-size:10px}.daily-tasks{display:grid;gap:7px;margin-top:9px}.daily-task{padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#ffffff05;font-size:9px;color:#aab8ce}.daily-task strong{display:block;color:#e8f0ff;font-size:10px;margin-bottom:3px}.daily-progress{height:4px;margin-top:6px;background:#202b40;border-radius:99px;overflow:hidden}.daily-progress i{display:block;height:100%;background:var(--mint);border-radius:99px}.arena-banner{position:absolute;right:22px;top:22px;z-index:2;padding:7px 10px;border:1px solid #ffbd4a66;border-radius:999px;background:#171b2bd9;color:#ffdc8b;font-size:10px;font-weight:1000;pointer-events:none}.spectator-banner{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:3;padding:8px 14px;border:1px solid #a98bff88;border-radius:999px;background:#1a1732e8;color:#d8c9ff;font-size:10px;font-weight:1000;pointer-events:none;white-space:nowrap}.extras-section,.daily-section{padding-top:2px}
 .version-tag{display:inline-block;margin-left:8px;padding:3px 7px;border:1px solid #6f83b5;border-radius:7px;background:#172344;color:#cbd8ff;font-size:11px;font-weight:800;vertical-align:middle;letter-spacing:.3px}
 </style>
 </head>
@@ -103,7 +105,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 </div>
 <main class="app">
   <header>
-    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.12</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
+    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.13</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
     <div class="header-right"><div class="lan-pill"><i class="lan-dot"></i> ONLINE ARENA</div><div class="room-pill"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="copy-btn" id="copyCode" type="button">KOPYALA</button></div></div>
   </header>
   <div class="layout">
@@ -111,12 +113,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
       <div class="game-top"><div class="mode-label"><div class="mode-icon" id="modeIcon">▣</div><div><div class="mode-title" id="modeTitle">TANK SAVAŞI</div><div class="mode-sub" id="modeSub">MOD SEÇİMİNİ BEKLİYOR</div></div></div><div class="timer" id="timer">--:--</div></div>
       <div class="canvas-wrap">
         <div class="canvas-frame">
-          <canvas id="arena" width="960" height="600" aria-label="Mini Arena oyun alanı"></canvas>
+          <canvas id="arena" width="960" height="600" aria-label="Mini Arena oyun alanı"></canvas><div id="arenaBanner" class="arena-banner hidden"></div><div id="spectatorBanner" class="spectator-banner hidden">İZLEYİCİ MODU · MAÇI İZLİYORSUN</div>
           <div class="canvas-status"><i class="status-dot" id="phaseDot"></i><span id="phaseLabel">ODA BEKLENİYOR</span></div>
           <div class="join-overlay hidden" id="joinOverlay">
             <div class="join-card">
               <div class="join-emblem">✦</div><h2>Mini Arena'ya hoş geldin</h2>
-              <p>Bir oda oluştur veya 6 haneli davet koduyla katıl. En fazla 4 kişi, 8 farklı mini oyun!</p>
+              <p>Bir oda oluştur veya 6 haneli davet koduyla katıl. En fazla 4 kişi, 8 farklı mini oyun, 4 arena haritası ve seri maçlar!</p>
               <div class="skin-current"><span id="selectedSkinLabel">Seçilen karakter: Çürük Dişli</span><button class="skin-change" id="changeSkinButton" type="button">SKİN DEĞİŞTİR</button></div>
               <input class="field" id="nameInput" maxlength="14" placeholder="Oyuncu adın" autocomplete="nickname" required>
               <button class="primary" id="createRoomButton" type="button">ODA OLUŞTUR&nbsp; ✦</button>
@@ -154,6 +156,17 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
         <button class="start-btn" id="startButton" style="width:100%" disabled>2 OYUNCU BEKLENİYOR</button>
         <button class="secondary-btn hidden" id="finishButton" type="button" style="width:100%;margin-top:8px;border-color:#ff6c91;color:#ff9aaa">TURU BİTİR</button>
         <div class="host-note" id="startNote" style="margin-top:8px">İlk katılan oyuncu oda sahibi olur ve turu başlatır.</div>
+      </section>
+
+      <section class="extras-section">
+        <h3 class="section-title">ARENA AYARLARI</h3>
+        <div class="extra-control"><label for="mapSelect">Harita</label><select id="mapSelect" class="field compact"><option value="neon">Neon Şehir</option><option value="desert">Çöl</option><option value="ice">Buzul</option><option value="space">Uzay</option></select></div>
+        <div class="extra-control"><label for="seriesSelect">Seri uzunluğu</label><select id="seriesSelect" class="field compact"><option value="3">3 maçlık seri</option><option value="5">5 maçlık seri</option></select></div>
+        <div class="host-note">Harita ve seri ayarlarını oda sahibi değiştirir.</div>
+      </section>
+      <section class="daily-section">
+        <div class="side-head"><h3 class="section-title">GÜNLÜK GÖREVLER</h3><span class="host-badge">HER GÜN YENİLENİR</span></div>
+        <div id="dailyTasks" class="daily-tasks"></div>
       </section>
       <section class="rules-section">
         <h3 class="section-title" style="margin-bottom:10px">KONTROLLER</h3>
@@ -348,10 +361,33 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   $('mobileAction').addEventListener('pointerdown', ev => { ev.preventDefault(); mobileAction = true; });
   ['pointerup','pointercancel','pointerleave'].forEach(name => $('mobileAction').addEventListener(name, () => mobileAction = false));
 
+  const dailyKey = 'miniArenaDaily_' + new Date().toISOString().slice(0,10);
+  let dailyProgress = JSON.parse(localStorage.getItem(dailyKey) || '{"played":0,"wins":0,"kos":0}');
+  let lastDailyRound = 0, lastDailyScores = {}, dailyFinishedRound = 0;
+  function renderDailyTasks(){
+    const tasks=[{title:'Bir maç tamamla',value:dailyProgress.played,target:1},{title:'Bir maç kazan',value:dailyProgress.wins,target:1},{title:'2 rakibi ele',value:dailyProgress.kos,target:2}];
+    $('dailyTasks').innerHTML=tasks.map(t=>`<div class="daily-task"><strong>${t.title} · ${Math.min(t.value,t.target)}/${t.target}</strong><div class="daily-progress"><i style="width:${Math.min(100,t.value/t.target*100)}%"></i></div></div>`).join('');
+  }
+  function updateDailyFromState(s){
+    if(!s || !token)return;
+    if(s.phase==='running') lastDailyRound=s.roundNumber;
+    if(s.phase==='finished' && s.roundNumber===lastDailyRound && s.roundNumber!==dailyFinishedRound && lastDailyRound){
+      dailyProgress.played++; const me=s.players.find(p=>p.id===s.selfId); const top=[...s.players].sort((a,b)=>b.score-a.score)[0]; if(me && top && me.id===top.id)dailyProgress.wins++;
+      localStorage.setItem(dailyKey,JSON.stringify(dailyProgress));dailyFinishedRound=s.roundNumber;lastDailyRound=0;renderDailyTasks();
+    }
+    const me=s.players.find(p=>p.id===s.selfId); if(me){const currentKos=me.kos||0;dailyProgress.kos+=Math.max(0,currentKos-(lastDailyScores.kos||0));lastDailyScores={kos:currentKos};localStorage.setItem(dailyKey,JSON.stringify(dailyProgress));renderDailyTasks();}
+  }
+  renderDailyTasks();
+  async function saveArenaSettings(){if(!token||!state?.isHost)return;try{await api('/api/host/settings',{mapId:$('mapSelect').value,seriesLength:Number($('seriesSelect').value)});await pollState();showToast('Arena ayarları kaydedildi.')}catch(e){showToast(e.message)}}
+  $('mapSelect').addEventListener('change',saveArenaSettings); $('seriesSelect').addEventListener('change',saveArenaSettings);
   function updateUI() {
     if (!state) return;
     if (state.roomCode) $('roomCode').textContent = state.roomCode;
     $('playerCount').textContent = `${state.playersCount} / 4`;
+    $('mapSelect').value=state.mapId||'neon'; $('seriesSelect').value=String(state.seriesLength||3); $('mapSelect').disabled=!state.isHost||!['lobby','finished'].includes(state.phase); $('seriesSelect').disabled=!state.isHost||!['lobby','finished'].includes(state.phase);
+    updateDailyFromState(state);
+    const selfPlayer=state.players.find(p=>p.id===state.selfId); $('spectatorBanner').classList.toggle('hidden',!(state.phase==='running'&&selfPlayer&&!selfPlayer.alive&&selfPlayer.lives<=0));
+    const ev=state.arenaEvent; $('arenaBanner').classList.toggle('hidden',state.phase!=='running'||!ev); $('arenaBanner').textContent=ev?`${ev.title} · ${Math.ceil((ev.timeLeft||0)/1000)}s`:'';
     $('connectionText').textContent = 'Online sunucuya bağlı';
     $('modeTitle').textContent = state.modes[state.mode].title.toLocaleUpperCase('tr-TR');
     const ui = MODE_UI[state.mode];
@@ -375,7 +411,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     const nextRosterSignature = JSON.stringify(state.players.map(p => [p.id,p.name,p.color,p.skin,p.score,p.alive,p.isHost,p.id===state.selfId]));
     if (nextRosterSignature !== rosterSignature) {
       rosterSignature = nextRosterSignature;
-      roster.innerHTML = state.players.map(p => `<div class="player-row ${p.id === state.selfId ? 'me' : ''}"><div class="player-avatar" style="background:${p.color}">${esc(p.name.slice(0,1).toLocaleUpperCase('tr-TR'))}</div><div><div class="player-name">${esc(p.name)} ${p.id === state.selfId ? '<span style="color:#42e8d5;font-size:8px">SEN</span>' : ''}</div><div class="player-meta">${p.isHost ? '<span class="crown">★ ODA SAHİBİ</span>' : (p.alive ? 'Hazır' : 'Elendi')}</div></div><div class="player-score">${p.score}</div></div>`).join('');
+      roster.innerHTML = state.players.map(p => `<div class="player-row ${p.id === state.selfId ? 'me' : ''}"><div class="player-avatar" style="background:${p.color}">${esc(p.name.slice(0,1).toLocaleUpperCase('tr-TR'))}</div><div><div class="player-name">${esc(p.name)} ${p.id === state.selfId ? '<span style="color:#42e8d5;font-size:8px">SEN</span>' : ''}</div><div class="player-meta">${p.isHost ? '<span class="crown">★ ODA SAHİBİ</span>' : (p.alive ? 'Hazır' : 'Elendi')}</div></div><div class="player-score">${p.score}<small style="display:block;color:#9eacbf;font-size:8px">🏆 ${p.seriesWins||0}</small></div></div>`).join('');
       for (let i = state.players.length; i < 4; i++) roster.innerHTML += `<div class="empty-player">+ Oyuncu bekleniyor</div>`;
     }
     const phaseLabels = {lobby:'OYUNCULAR BEKLENİYOR',countdown:'HAZIR OL!',running:'OYUN DEVAM EDİYOR',finished:'TUR BİTTİ'};
@@ -386,7 +422,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 
   function roundedRect(c,x,y,w,h,r,fill,stroke){c.beginPath();c.roundRect(x,y,w,h,r);if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.stroke()}}
   function drawBackground(c=ctx) {
-    const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,'#101e31');g.addColorStop(1,'#0b1322');c.fillStyle=g;c.fillRect(0,0,W,H);
+    const map=(state&&state.mapId)||'neon';const palettes={neon:['#101e31','#0b1322'],desert:['#49311f','#201a19'],ice:['#17394b','#0b1d30'],space:['#21183f','#080d20']};const colors=palettes[map]||palettes.neon;const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,colors[0]);g.addColorStop(1,colors[1]);c.fillStyle=g;c.fillRect(0,0,W,H);
     c.save();c.strokeStyle='#a9c8ee0d';c.lineWidth=1;for(let x=0;x<W;x+=48){c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke()}for(let y=0;y<H;y+=48){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}c.restore();
     const glow=c.createRadialGradient(W/2,H/2,20,W/2,H/2,420);glow.addColorStop(0,'#32567816');glow.addColorStop(1,'#09101b00');c.fillStyle=glow;c.fillRect(0,0,W,H);
     roundedRect(c,13,13,W-26,H-26,18,null,'#b5d6fb27');
@@ -419,7 +455,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   function rebuildStaticLayer(mode){
     drawBackground(staticCtx);
     if(mode==='tank')drawTankDecor(staticCtx);else if(mode==='sumo')drawSumo(staticCtx);else if(mode==='push')drawPush(staticCtx);else if(mode==='soccer')drawSoccer(staticCtx);else if(mode==='floor')drawFloorBase(staticCtx);
-    cachedMode=mode;
+    cachedMode=mode+'_'+((state&&state.mapId)||'neon');
   }
 
   function drawSkinCharacter(p) {
@@ -549,6 +585,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   function drawBullets(){for(const b of (renderState || state).bullets||[]){ctx.save();ctx.shadowColor='#ffbd4a';ctx.shadowBlur=2;ctx.fillStyle='#fff2a5';ctx.beginPath();ctx.arc(b.x,b.y,b.r||6,0,Math.PI*2);ctx.fill();ctx.restore()}}
   function drawOverlay(){
     const rs=renderState || state; if(!rs)return;
+    if(rs.phase==='running' && rs.selfId && (rs.players||[]).some(p=>p.id===rs.selfId&&!p.alive&&p.lives<=0)){ctx.save();ctx.textAlign='center';ctx.fillStyle='#d8c9ff';ctx.font='1000 16px Manrope';ctx.fillText('İZLEYİCİ MODU',W/2,H-28);ctx.restore();}
     if(rs.phase==='running' && rs.mode==='hotpotato'){
       ctx.save();ctx.textAlign='right';ctx.fillStyle='#ff7b82';ctx.font='1000 15px Manrope';ctx.fillText('BOMBA: '+(Math.ceil((rs.bombTimeLeft||0)/1000))+' sn',W-28,52);ctx.restore();
     }
@@ -557,7 +594,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     } else if(rs.phase==='countdown'){
       const n=Math.ceil(rs.countdown/1000);ctx.save();ctx.fillStyle='#06101ccc';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.shadowColor=MODE_UI[rs.mode].accent;ctx.shadowBlur=35;ctx.fillStyle='#fff';ctx.font='1000 112px Manrope';ctx.fillText(n>0?n:'BAŞLA!',W/2,H/2+35);ctx.restore();
     } else if(rs.phase==='finished'){
-      ctx.save();ctx.fillStyle='#06101cd9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ffbd4a';ctx.font='900 15px Manrope';ctx.fillText('TUR TAMAMLANDI',W/2,H/2-42);ctx.fillStyle='#fff';ctx.font='1000 30px Manrope';ctx.fillText(rs.resultText||'Oyun bitti',W/2,H/2+5);ctx.fillStyle='#aabbd3';ctx.font='600 13px Manrope';ctx.fillText(rs.isHost?'Yeni tur için sağdaki butona bas.':'Oda sahibinin yeni turu başlatması bekleniyor.',W/2,H/2+39);ctx.restore();
+      ctx.save();ctx.fillStyle='#06101cd9';ctx.fillRect(0,0,W,H);ctx.textAlign='center';ctx.fillStyle='#ffbd4a';ctx.font='900 15px Manrope';ctx.fillText('TUR TAMAMLANDI',W/2,H/2-42);ctx.fillStyle='#fff';ctx.font='1000 30px Manrope';ctx.fillText(rs.resultText||'Oyun bitti',W/2,H/2+5);ctx.fillStyle='#aabbd3';ctx.font='600 13px Manrope';ctx.fillText(rs.isHost?'Rövanş için sağdaki butona bas.':'Oda sahibinin rövanşı başlatması bekleniyor.',W/2,H/2+39);
+      const ranked=[...(rs.players||[])].sort((a,b)=>b.score-a.score);ctx.textAlign='left';ctx.font='800 12px Manrope';ctx.fillStyle='#dce8ff';ranked.slice(0,4).forEach((p,i)=>ctx.fillText(`${i+1}. ${p.name}  ·  ${p.score} puan  ·  ${p.kos||0} eleme  ·  ${p.deaths||0} düşüş`,W/2-190,H/2+78+i*21));
+      const me=ranked.find(p=>p.id===rs.selfId);if(me)ctx.fillText(`İstatistiklerin: ${me.hits||0} isabet · ${me.goals||0} gol · ${me.gems||0} elmas`,W/2-190,H/2+174);ctx.restore();
     }
   }
   function render(timestamp=0){
@@ -565,7 +604,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     if(document.hidden || timestamp-lastRenderAt<FRAME_MS)return;
     lastRenderAt=timestamp;
     renderState=makeRenderState(Date.now());
-    if(cachedMode!==(renderState?.mode||'menu'))rebuildStaticLayer(renderState?.mode||'menu');
+    const cacheKey=(renderState?.mode||'menu')+'_'+(renderState?.mapId||'neon');if(cachedMode!==cacheKey)rebuildStaticLayer(renderState?.mode||'menu');
     ctx.drawImage(staticCanvas,0,0);
     if(renderState){
       if(renderState.mode==='gems')drawGems();if(renderState.mode==='survival')drawSurvival();
