@@ -23,6 +23,11 @@ const MODES = {
   survival: { title: 'Meteor Yağmuru', short: 'HAYATTA KAL', description: 'Meteor dalgalarından kaç, avcı meteordan sıyrıl ve can kristallerini topla.', duration: 90, target: 999, action: 'KALKAN DEPARI', key: 'SPACE', accent: '#ff875e' },
   hotpotato: { title: 'Bomba Pasla', short: 'BOMBA', description: 'Bomba sende patlamadan SPACE ile yakındaki rakibe pasla. Patlayan oyuncu can kaybeder!', duration: 75, target: 6, action: 'BOMBA PASLA', key: 'SPACE', accent: '#ff5b62' },
   floor: { title: 'Çöken Zemin', short: 'ZEMİN', description: 'Üzerinde durduğun karo çatlayıp çöker. Sürekli hareket et, boşluğa düşme!', duration: 80, target: 15, action: 'ZIPLA', key: 'SPACE', accent: '#70d6ff' },
+  ice: { title: 'Buz Pateni', short: 'BUZ', description: 'Kaygan zeminde rakiplerine çarp ve arenadan düşür.', duration: 75, target: 999, action: 'HIZLI DEPAR', key: 'SPACE', accent: '#8ceaff' },
+  hammer: { title: 'Dev Çekiç', short: 'ÇEKİÇ', description: 'SPACE ile çekicini salla ve yakındaki rakipleri uzağa fırlat.', duration: 75, target: 8, action: 'ÇEKİÇLE VUR', key: 'SPACE', accent: '#ffc16b' },
+  lava: { title: 'Lavdan Kaçış', short: 'LAV', description: 'Lav yükseliyor. Platformlarda kal ve son hayatta kalan ol.', duration: 75, target: 999, action: 'ZIPLA', key: 'SPACE', accent: '#ff754e' },
+  bombRain: { title: 'Bomba Yağmuru', short: 'BOMBA', description: 'Bombalardan kaç. Güvenli alan giderek küçülüyor.', duration: 75, target: 999, action: 'DEPAR', key: 'SPACE', accent: '#ff656d' },
+  bigBall: { title: 'Dev Top', short: 'DEV TOP', description: 'Dev topu rakip kalelere gönder ve gol at.', duration: 90, target: 5, action: 'ŞUT ÇEK', key: 'SPACE', accent: '#7bbaff' },
 };
 const MODE_IDS = Object.keys(MODES);
 
@@ -57,6 +62,9 @@ let bombExplodesAt = 0;
 const FLOOR_COLS = 12, FLOOR_ROWS = 8;
 let floorTiles = [];
 let floorScoreAt = 0;
+let lavaLevel = 0;
+let nextBombAt = 0;
+let hammerHits = 0;
 
 function random(min, max) { return min + Math.random() * (max - min); }
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
@@ -91,7 +99,7 @@ function randomSafeFloorSpot() {
   return { x: (tile.col + .5) * (WORLD.width / FLOOR_COLS), y: (tile.row + .5) * (WORLD.height / FLOOR_ROWS) };
 }
 function spawnFor(slot) {
-  if (modeId === 'sumo') {
+  if (modeId === 'sumo' || modeId === 'ice' || modeId === 'hammer' || modeId === 'lava' || modeId === 'bombRain') {
     const sumoPoints = [
       { x: 480, y: 430, a: -Math.PI/2 },
       { x: 650, y: 300, a: Math.PI },
@@ -141,7 +149,7 @@ function resetWorld() {
   for (const p of players.values()) {
     resetPlayer(p);
     if (modeId === 'tank') p.hp = 2;
-    if (['sumo', 'survival', 'hotpotato', 'floor'].includes(modeId)) p.lives = 2;
+    if (['sumo', 'survival', 'hotpotato', 'floor', 'ice', 'lava', 'bombRain'].includes(modeId)) p.lives = 2;
   }
   if (modeId === 'gems') for (let i = 0; i < 14; i++) gems.push(makeGem());
   if (modeId === 'survival') {
@@ -149,19 +157,22 @@ function resetWorld() {
     survivalStartedAt = now; survivalNextHazardAt = now + 5200; survivalNextLootAt = now + 4200;
     survivalHunterSpawned = false; survivalWave = 1;
   }
-  if (modeId === 'soccer') ball = { x: WORLD.width / 2, y: WORLD.height / 2, vx: 0, vy: 0, lastKickBy: null, spin: 0 };
+  if (modeId === 'soccer' || modeId === 'bigBall') ball = { x: WORLD.width / 2, y: WORLD.height / 2, vx: 0, vy: 0, lastKickBy: null, spin: 0, radius: modeId === 'bigBall' ? 31 : 16 };
+  if (modeId === 'lava') { lavaLevel = 0; }
+  if (modeId === 'bombRain') { nextBombAt = now + 900; }
   if (modeId === 'hotpotato') {
     const alive = [...players.values()].filter(p => p.alive);
     bombHolderId = alive[Math.floor(Math.random() * alive.length)]?.id || null;
     bombExplodesAt = now + 7200;
   }
   if (modeId === 'floor') { makeFloor(); floorScoreAt = now + 1800; }
+  hammerHits = 0;
   lastSurvivalPoint = now;
 }
 function changePhaseToLobby() {
   phase = 'lobby'; roundEndsAt = null; countdownEndsAt = null; resultText = '';
   bullets = []; gems = []; hazards = []; survivalLoot = []; floorTiles = []; ball = null;
-  bombHolderId = null; bombExplodesAt = 0;
+  bombHolderId = null; bombExplodesAt = 0; lavaLevel = 0; hazards = [];
   for (const p of players.values()) resetPlayer(p);
 }
 function beginCountdown() {
@@ -467,6 +478,32 @@ function tickHotPotato(dt, now) {
     bombExplodesAt = now + random(5300, 7200);
   }
 }
+function tickIce(dt, now) {
+  for (const p of players.values()) { if (!p.alive) continue; movePlayer(p, dt, 235, 2.2); p.vx *= Math.pow(.992, dt*60); p.vy *= Math.pow(.992, dt*60); if (actionReady(p, now)) { p.actionReadyAt=now+cooldownFor(p,2200); p.powerUntil=now+powerFor(p,420); p.vx+=Math.cos(p.angle)*170; p.vy+=Math.sin(p.angle)*170; } }
+  collidePlayers(1.55);
+  for (const p of players.values()) if (p.alive && (p.x<12||p.x>WORLD.width-12||p.y<12||p.y>WORLD.height-12)) dropOut(p,now);
+}
+function tickHammer(dt, now) {
+  for (const p of players.values()) { if (!p.alive) continue; movePlayer(p,dt,205,11); keepInBounds(p); if(actionReady(p,now)){p.actionReadyAt=now+cooldownFor(p,1450);p.powerUntil=now+powerFor(p,360);for(const o of players.values()){if(o.id===p.id||!o.alive)continue;const dx=o.x-p.x,dy=o.y-p.y,d=Math.hypot(dx,dy)||1;if(d<105){const force=950*(1-d/105);o.vx+=dx/d*force;o.vy+=dy/d*force;o.lastHitBy=p.id;if(force>300){o.lives=Math.max(0,o.lives-1);if(o.lives===0)dropOut(o,now);p.score++;p.kos++;}}}} }
+  collidePlayers(.7); for(const p of players.values()) if(p.alive){p.x+=p.vx*dt;p.y+=p.vy*dt;keepInBounds(p);}
+}
+function tickLava(dt, now) {
+  lavaLevel=Math.min(220,lavaLevel+dt*2.35);
+  for(const p of players.values()){if(!p.alive)continue;movePlayer(p,dt,235,11);keepInBounds(p,18);if(actionReady(p,now)){p.actionReadyAt=now+cooldownFor(p,1800);p.powerUntil=now+powerFor(p,280);p.vy-=210;}}
+  for(const p of players.values()) if(p.alive && p.y>WORLD.height-lavaLevel-30){dropOut(p,now);}
+}
+function tickBombRain(dt, now) {
+  for(const p of players.values()){if(!p.alive)continue;movePlayer(p,dt,220,12);keepInBounds(p);if(actionReady(p,now)){p.actionReadyAt=now+cooldownFor(p,1900);p.powerUntil=now+powerFor(p,300);p.vx+=Math.cos(p.angle)*125;p.vy+=Math.sin(p.angle)*125;}}
+  if(now>=nextBombAt && hazards.length<18){hazards.push({id:crypto.randomUUID(),x:random(35,WORLD.width-35),y:-25,vx:random(-18,18),vy:random(220,310),r:17,phase:0,hunter:false,type:'bomb',fuse:0});nextBombAt=now+random(700,1150);}
+  for(let i=hazards.length-1;i>=0;i--){const h=hazards[i];h.x+=h.vx*dt;h.y+=h.vy*dt;h.fuse+=dt;if(h.y>WORLD.height-28){for(const p of players.values())if(p.alive&&Math.hypot(p.x-h.x,p.y-h.y)<72){p.lives--;p.deaths++;p.vx+=(p.x-h.x)*3;p.vy-=180;if(p.lives<=0)dropOut(p,now);else p.invulnerableUntil=now+800;}hazards.splice(i,1);}}
+  // The safe area slowly narrows from every edge.
+  const inset=Math.min(115,Math.max(0,(now-(roundEndsAt-75000))/1000*1.55));
+  for(const p of players.values())if(p.alive&&(p.x<inset+12||p.x>WORLD.width-inset-12||p.y<inset+12||p.y>WORLD.height-inset-12)){p.lives--;p.deaths++;p.invulnerableUntil=now+900;if(p.lives<=0)dropOut(p,now);else{p.x=clamp(p.x,inset+25,WORLD.width-inset-25);p.y=clamp(p.y,inset+25,WORLD.height-inset-25);}}
+}
+function tickBigBall(dt, now) {
+  for(const p of players.values()){if(!p.alive)continue;movePlayer(p,dt,220,11);keepInBounds(p,40);if(actionReady(p,now)){p.actionReadyAt=now+cooldownFor(p,600);const dx=ball.x-p.x,dy=ball.y-p.y,d=Math.hypot(dx,dy);if(d<115){let ax=Math.cos(p.angle),ay=Math.sin(p.angle);if(Math.hypot(p.input.x,p.input.y)<.1&&d>1){ax=dx/d;ay=dy/d;}ball.vx+=ax*760;ball.vy+=ay*760;ball.lastKickBy=p.id;}}}
+  collidePlayers(.55);ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;const damp=Math.pow(.46,dt);ball.vx*=damp;ball.vy*=damp;ball.spin+=dt*2.5;const goal=105;let scored=false;let shooter=ball.lastKickBy&&players.get(ball.lastKickBy);if((ball.x<18||ball.x>WORLD.width-18)&&Math.abs(ball.y-WORLD.height/2)<goal){if(shooter)shooter.score++,shooter.goals++;scored=true;}else if((ball.y<18||ball.y>WORLD.height-18)&&Math.abs(ball.x-WORLD.width/2)<goal){if(shooter)shooter.score++,shooter.goals++;scored=true;}if(scored){ball.x=WORLD.width/2;ball.y=WORLD.height/2;ball.vx=ball.vy=0;ball.lastKickBy=null;}else{if(ball.x<ball.radius||ball.x>WORLD.width-ball.radius)ball.vx*=-.72;if(ball.y<ball.radius||ball.y>WORLD.height-ball.radius)ball.vy*=-.72;ball.x=clamp(ball.x,ball.radius,WORLD.width-ball.radius);ball.y=clamp(ball.y,ball.radius,WORLD.height-ball.radius);}
+}
 function loseFloorLife(p, now) {
   p.lives--; p.deaths++; p.invulnerableUntil = now + 850;
   if (p.lives <= 0) { p.alive = false; return; }
@@ -525,8 +562,13 @@ function tick() {
   else if (modeId === 'survival') tickSurvival(dt, now);
   else if (modeId === 'hotpotato') tickHotPotato(dt, now);
   else if (modeId === 'floor') tickFloor(dt, now);
+  else if (modeId === 'ice') tickIce(dt, now);
+  else if (modeId === 'hammer') tickHammer(dt, now);
+  else if (modeId === 'lava') tickLava(dt, now);
+  else if (modeId === 'bombRain') tickBombRain(dt, now);
+  else if (modeId === 'bigBall') tickBigBall(dt, now);
   if (phase !== 'running') return;
-  if (['sumo', 'survival', 'hotpotato', 'floor'].includes(modeId)) finishIfLastAlive();
+  if (['sumo', 'survival', 'hotpotato', 'floor', 'ice', 'lava', 'bombRain'].includes(modeId)) finishIfLastAlive();
   if (phase !== 'running') return;
   checkTarget();
   if (phase === 'running' && now >= roundEndsAt) finishRound('time');
@@ -539,18 +581,18 @@ function publicState(req) {
     world: WORLD, roomCode: self ? ROOM_CODE : null, mode: modeId, modes: MODES, phase,
     timeLeft: phase === 'running' ? Math.max(0, roundEndsAt - now) : 0,
     countdown: phase === 'countdown' ? Math.max(0, countdownEndsAt - now) : 0,
-    resultText, roundNumber, maxPlayers: MAX_PLAYERS, playersCount: players.size, mapId, maps: MAPS, seriesLength, seriesWins, arenaEvent: {id:arenaEvent.id,title:arenaEvent.title,timeLeft:Math.max(0,arenaEvent.endsAt-now)},
+    resultText, roundNumber, maxPlayers: MAX_PLAYERS, playersCount: players.size, mapId, maps: MAPS, seriesLength, seriesWins, arenaEvent: {id:arenaEvent.id,title:arenaEvent.title,timeLeft:Math.max(0,arenaEvent.endsAt-now)}, lavaLevel, safeInset: modeId==='bombRain'?Math.min(115,Math.max(0,(now-(roundEndsAt-75000))/1000*1.55)):0,
     hostId, selfId: self ? self.id : null, isHost: Boolean(self && self.id === hostId),
     players: [...players.values()].map(p => ({ id: p.id, name: p.name, skin: p.skin, color: p.color, slot: p.slot, x: p.x, y: p.y, angle: p.angle, vx: p.vx, vy: p.vy, score: p.score, hits:p.hits, goals:p.goals, gems:p.gems, kos:p.kos, deaths:p.deaths, seriesWins:seriesWins[p.id]||0, hp: p.hp, lives: p.lives, alive: p.alive, power: p.powerUntil > now, cooldownLeft: Math.max(0, p.actionReadyAt - now), controlMs: p.controlMs, isHost: p.id === hostId, invulnerable: p.invulnerableUntil > now })),
     bullets: bullets.map(b => ({ x: b.x, y: b.y, r: b.r })),
     gems: gems.map(g => ({ x: g.x, y: g.y, kind: g.kind, pulse: g.pulse })),
-    hazards: hazards.map(h => ({ x: h.x, y: h.y, r: h.r, phase: h.phase, hunter: Boolean(h.hunter) })),
+    hazards: hazards.map(h => ({ x: h.x, y: h.y, r: h.r, phase: h.phase, hunter: Boolean(h.hunter), type:h.type||'meteor' })),
     survivalLoot: survivalLoot.map(o => ({ x: o.x, y: o.y })),
     survivalWave,
     bombHolderId: modeId === 'hotpotato' ? bombHolderId : null,
     bombTimeLeft: modeId === 'hotpotato' ? Math.max(0, bombExplodesAt - now) : 0,
     floorTiles: modeId === 'floor' ? floorTiles.map(t => ({ col: t.col, row: t.row, alive: t.alive, crackIn: t.crackAt ? Math.max(0, t.crackAt - now) : 0 })) : [],
-    ball: ball ? { x: ball.x, y: ball.y, vx: ball.vx, vy: ball.vy, spin: ball.spin } : null,
+    ball: ball ? { x: ball.x, y: ball.y, vx: ball.vx, vy: ball.vy, spin: ball.spin, radius:ball.radius||16 } : null,
   };
 }
 function sendJson(res, status, data) {
