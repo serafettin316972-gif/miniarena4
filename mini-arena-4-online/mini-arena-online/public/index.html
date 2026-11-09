@@ -47,6 +47,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 @media(max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 305px}.side-panel{padding:14px}.mode-grid{gap:6px}.mode-card{min-height:94px;padding:9px}}
 @media(max-width:780px){body{padding:14px 10px 26px}.layout{grid-template-columns:1fr}.side-panel{display:grid;grid-template-columns:1fr 1fr;gap:13px}.roster-section{grid-row:span 2}.modes-section{grid-column:2}.start-section{grid-column:2}.rules-section{grid-column:1/-1}.mode-grid{grid-template-columns:repeat(3,1fr)}.mode-card{min-height:93px}.canvas-wrap{padding:8px}}
 @media(max-width:560px){header{align-items:flex-start;flex-wrap:wrap}.header-right{width:100%;justify-content:space-between}.brand h1{font-size:15px}.subtitle{font-size:8px}.lan-pill{font-size:9px}.room-pill{font-size:9px}.layout{gap:10px}.side-panel{display:flex}.mode-grid{grid-template-columns:repeat(2,1fr)}.mode-card{min-height:88px}.game-top{height:51px;padding:0 12px}.mode-title{font-size:10px}.canvas-status{top:15px;left:15px}.bottom-bar{padding:10px 12px}.mobile-pad{display:flex}.join-card{padding:22px 18px}.join-card h2{font-size:20px}}
+.version-tag{display:inline-block;margin-left:8px;padding:3px 7px;border:1px solid #6f83b5;border-radius:7px;background:#172344;color:#cbd8ff;font-size:11px;font-weight:800;vertical-align:middle;letter-spacing:.3px}
 </style>
 </head>
 <body>
@@ -88,7 +89,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 </div>
 <main class="app">
   <header>
-    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
+    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.11</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
     <div class="header-right"><div class="lan-pill"><i class="lan-dot"></i> ONLINE ARENA</div><div class="room-pill"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="copy-btn" id="copyCode" type="button">KOPYALA</button></div></div>
   </header>
   <div class="layout">
