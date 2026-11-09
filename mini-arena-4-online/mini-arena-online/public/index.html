@@ -83,6 +83,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
       </section>
       <section class="start-section" id="hostControls">
         <button class="start-btn" id="startButton" style="width:100%" disabled>2 OYUNCU BEKLENİYOR</button>
+        <button class="secondary-btn hidden" id="finishButton" type="button" style="width:100%;margin-top:8px;border-color:#ff6c91;color:#ff9aaa">TURU BİTİR</button>
         <div class="host-note" id="startNote" style="margin-top:8px">İlk katılan oyuncu oda sahibi olur ve turu başlatır.</div>
       </section>
       <section class="rules-section">
@@ -209,6 +210,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     catch(e) { showToast(e.message); }
     finally { b.disabled = false; }
   });
+  $('finishButton').addEventListener('click', async () => {
+    if (!token || !state?.isHost || !['running','countdown'].includes(state.phase)) return;
+    const b = $('finishButton'); b.disabled = true;
+    try { await api('/api/host/finish', {}); await pollState(); showToast('Tur erkenden bitirildi.'); }
+    catch(e) { showToast(e.message); }
+    finally { b.disabled = false; }
+  });
   $('leaveButton').addEventListener('click', async () => {
     try { if (token) await api('/api/leave', {}); } catch {}
     token = null; sessionStorage.removeItem('miniArenaToken'); state = null; keys.clear(); input = {x:0,y:0,action:false}; $('joinOverlay').classList.remove('hidden'); $('leaveButton').classList.add('hidden'); showToast('Odadan ayrıldın.'); pollState();
@@ -280,6 +288,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     $('hostBadge').style.color = state.isHost ? 'var(--yellow)' : '#9cabc2';
     $('hostControls').classList.toggle('hidden', !state.isHost && state.phase !== 'finished');
     $('startButton').classList.toggle('hidden', !state.isHost);
+    $('finishButton').classList.toggle('hidden', !state.isHost || !['running','countdown'].includes(state.phase));
     if (state.isHost) {
       if (state.phase === 'finished') { $('startButton').textContent = 'YENİ TURU BAŞLAT'; $('startNote').textContent = 'Yeni turdan önce yukarıdan başka bir mod seçebilirsin.'; $('startButton').disabled = state.playersCount < 2; }
       else if (state.phase === 'lobby') { $('startButton').textContent = state.playersCount < 2 ? '2 OYUNCU BEKLENİYOR' : 'OYUNU BAŞLAT  →'; $('startButton').disabled = state.playersCount < 2; $('startNote').textContent = 'En az 2 oyuncu katıldığında turu başlat.'; }
@@ -287,7 +296,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     } else { $('modeNote').textContent = 'Modu oda sahibi seçer. Sen hazırsan oyun başlayınca mücadele et!'; }
     $('modeGrid').style.opacity = ['lobby','finished'].includes(state.phase) ? '1' : '.63';
     const roster = $('roster');
-    const nextRosterSignature = JSON.stringify(state.players.map(p => [p.id,p.name,p.color,p.score,p.alive,p.isHost,p.id===state.selfId]));
+    const nextRosterSignature = JSON.stringify(state.players.map(p => [p.id,p.name,p.color,p.skin,p.score,p.alive,p.isHost,p.id===state.selfId]));
     if (nextRosterSignature !== rosterSignature) {
       rosterSignature = nextRosterSignature;
       roster.innerHTML = state.players.map(p => `<div class="player-row ${p.id === state.selfId ? 'me' : ''}"><div class="player-avatar" style="background:${p.color}">${esc(p.name.slice(0,1).toLocaleUpperCase('tr-TR'))}</div><div><div class="player-name">${esc(p.name)} ${p.id === state.selfId ? '<span style="color:#42e8d5;font-size:8px">SEN</span>' : ''}</div><div class="player-meta">${p.isHost ? '<span class="crown">★ ODA SAHİBİ</span>' : (p.alive ? 'Hazır' : 'Elendi')}</div></div><div class="player-score">${p.score}</div></div>`).join('');
@@ -338,7 +347,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   }
 
   function drawSkinCharacter(p) {
-    const skin = p.skin || (p.id === state?.selfId ? selectedSkin : 'pink');
+    const skin = p.skin || (p.id === state?.selfId ? selectedSkin : 'tooth');
     const x=p.x, y=p.y;
     ctx.save();
     // Body and head
@@ -378,15 +387,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     if(p.invulnerable){ctx.globalAlpha=.58+.3*Math.sin(Date.now()/70)}
     ctx.shadowColor=p.color;ctx.shadowBlur=p.power?6:2;
     const rs=renderState || state;
-    if(rs.mode==='tank'){
-      ctx.translate(p.x,p.y);ctx.rotate(p.angle);
-      roundedRect(ctx,-22,-18,44,9,4,'#162333',p.color);roundedRect(ctx,-22,9,44,9,4,'#162333',p.color);
-      roundedRect(ctx,-18,-14,36,28,8,p.color,'#ffffff99');
-      roundedRect(ctx,0,-5,33,10,4,'#dce9f8','#ffffffaa');
-      ctx.fillStyle='#101a2a';ctx.beginPath();ctx.arc(-4,0,7,0,Math.PI*2);ctx.fill();ctx.restore();
-      ctx.save();ctx.fillStyle='#fff';ctx.font='bold 11px Manrope';ctx.textAlign='center';ctx.fillText(p.name,p.x,p.y-30);ctx.fillStyle='#ffffff30';roundedRect(ctx,p.x-18,p.y-24,36,4,2,'#ffffff22');roundedRect(ctx,p.x-18,p.y-24,36*(p.hp/2),4,2,p.color);ctx.restore();return;
-    }
-    // Seçilen oyuncu skini\n    drawSkinCharacter(p);\n    if(p.power){ctx.strokeStyle=p.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,27+Math.sin(Date.now()/45)*3,0,Math.PI*2);ctx.stroke()}
+    // Seçilen oyuncu skini
+    drawSkinCharacter(p);
+    if(p.power){ctx.strokeStyle=p.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,27+Math.sin(Date.now()/45)*3,0,Math.PI*2);ctx.stroke()}
     ctx.restore();
     ctx.save();ctx.textAlign='center';ctx.font='bold 12px Manrope';ctx.fillStyle='#eaf3ff';ctx.shadowColor='#000';ctx.shadowBlur=5;ctx.fillText(p.name,p.x,p.y-28);
     if(['survival','hotpotato','floor'].includes(rs.mode)){for(let i=0;i<p.lives;i++){ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x-10+(i*10),p.y+34,3,0,Math.PI*2);ctx.fill()}}
