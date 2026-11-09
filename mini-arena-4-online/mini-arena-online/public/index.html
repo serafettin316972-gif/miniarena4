@@ -105,7 +105,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 </div>
 <main class="app">
   <header>
-    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.15</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
+    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.16</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
     <div class="header-right"><div class="lan-pill"><i class="lan-dot"></i> ONLINE ARENA</div><div class="room-pill"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="copy-btn" id="copyCode" type="button">KOPYALA</button></div></div>
   </header>
   <div class="layout">
@@ -228,7 +228,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   setSelectedSkin(selectedSkin);
 
   let pollBusy = false, inputBusy = false, lastStateAt = 0, lastPollRequestAt = 0, lastFrameRequestAt = 0, lastRenderAt = 0, lastUiAt = 0, rosterSignature = '', cachedMode = null, toastTimer = null;
-  const SNAPSHOT_MS = 80, FRAME_MS = 1000 / 60; // İstemci çizimi: hedef 60 FPS
+  const SNAPSHOT_MS = 1000 / 30, FRAME_MS = 1000 / 60; // 30 Hz sunucu verisi, 60 FPS istemci çizimi
   let snapshotDuration = SNAPSHOT_MS;
   const staticCanvas = document.createElement('canvas'); staticCanvas.width = W; staticCanvas.height = H;
   const staticCtx = staticCanvas.getContext('2d', { alpha: false });
@@ -250,7 +250,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     const receivedAt = Date.now();
     const oldState = state;
     previousState = oldState && oldState.mode === next.mode ? oldState : next;
-    if (lastStateAt) snapshotDuration = Math.max(70, Math.min(250, receivedAt - lastStateAt));
+    if (lastStateAt) snapshotDuration = Math.max(25, Math.min(120, receivedAt - lastStateAt));
     state = next; lastStateAt = receivedAt;
     if (!lastUiAt || receivedAt - lastUiAt >= 350 || !oldState || oldState.phase !== next.phase || oldState.mode !== next.mode) { updateUI(); lastUiAt = receivedAt; }
   }
@@ -341,7 +341,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   async function sendInput() {
     if (!token || inputBusy || document.hidden) return;
     const now = Date.now();
-    const requestGap = state?.phase === 'running' ? 80 : 500;
+    const requestGap = state?.phase === 'running' ? 33 : 500;
     if (now - lastFrameRequestAt < requestGap) return;
     lastFrameRequestAt = now;
     const x = (keys.has('KeyD') || keys.has('ArrowRight') || mobileDirections.has('right') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') || mobileDirections.has('left') ? 1 : 0);
@@ -632,8 +632,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   async function init(){
     if(token)await rejoin();
     await pollState();
-    // Lobby: 2 updates/sec. During a match: 10 updates/sec. Never poll and send input separately.
-    setInterval(()=>{if(token)sendInput();else pollState()},50);
+    // Maçta 30 Hz giriş+durum paketi; sunucu simülasyonu da 30 Hz. Çizim requestAnimationFrame ile 60 FPS hedefler.
+    setInterval(()=>{if(token)sendInput();else pollState()},16);
     render();
   }
   init();
