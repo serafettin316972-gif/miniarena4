@@ -9,7 +9,32 @@
 :root{color-scheme:dark;--bg:#090d18;--panel:#111a2a;--panel2:#0d1523;--line:rgba(173,195,226,.14);--muted:#8492aa;--text:#eef4ff;--mint:#42e8d5;--yellow:#ffbd4a;--pink:#ff6c91;--purple:#a98bff;--blue:#76b8ff;--orange:#ff875e}
 *{box-sizing:border-box}html{min-width:320px}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -24%,#213659 0,transparent 54%),radial-gradient(ellipse at 100% 100%,#14172d 0,transparent 42%),var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif;padding:22px 18px 34px}button,input{font:inherit}button{touch-action:manipulation}.app{width:min(1380px,100%);margin:0 auto}
 header{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}.brand{display:flex;align-items:center;gap:12px;min-width:0}.logo{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:25px;color:#07131b;background:linear-gradient(140deg,#a5fff3,#42e8d5 55%,#21b9b1);box-shadow:0 8px 28px #42e8d52b}.brand h1{font-size:18px;line-height:1.1;letter-spacing:.13em;margin:0;font-weight:900}.subtitle{font-size:10px;letter-spacing:.18em;color:#8e9db7;margin-top:6px;font-weight:700}.header-right{display:flex;align-items:center;gap:9px}.lan-pill,.room-pill{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#111d2c;border:1px solid var(--line);border-radius:999px;font-size:10px;color:#aab8ce;letter-spacing:.1em;font-weight:800}.lan-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}.room-pill strong{font:600 15px 'DM Mono',monospace;color:var(--yellow);letter-spacing:.12em}.copy-btn{border:1px solid #42e8d54d;background:#42e8d51a;color:var(--mint);padding:6px 9px;border-radius:999px;font-size:9px;font-weight:900;cursor:pointer}.copy-btn:hover{background:#42e8d530}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:15px;align-items:start}.game-panel,.side-panel{background:linear-gradient(145deg,rgba(18,28,46,.97),rgba(11,18,32,.98));border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 18px 65px #0005}.game-top{height:58px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);background:#ffffff04}.mode-label{display:flex;align-items:center;gap:9px;min-width:0}.mode-icon{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:#42e8d51a;color:var(--mint);font-size:17px}.mode-title{font-size:12px;font-weight:900;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-sub{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.06em}.timer{font:600 14px 'DM Mono',monospace;color:var(--mint);background:#42e8d511;border:1px solid #42e8d533;border-radius:9px;padding:8px 12px;min-width:74px;text-align:center}.canvas-wrap{position:relative;padding:12px;background:#080e19}.canvas-frame{position:relative;overflow:hidden;border:1px solid #ffffff12;border-radius:13px;background:#0c1523;box-shadow:inset 0 0 60px #0008}canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;touch-action:none;contain:strict}.join-overlay{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;background:#050914b8;backdrop-filter:blur(7px)}.join-card{width:min(410px,100%);padding:28px 27px 24px;background:linear-gradient(145deg,#152238f5,#0e1727f5);border:1px solid #d0e1ff26;border-radius:19px;box-shadow:0 25px 90px #000a;text-align:center}.join-emblem{width:54px;height:54px;margin:0 auto 13px;border-radius:17px;display:grid;place-items:center;background:#42e8d51b;border:1px solid #42e8d54a;color:var(--mint);font-size:28px}.join-card h2{font-size:23px;margin:0 0 7px;font-weight:900}.join-card p{font-size:12px;color:#9baac2;line-height:1.65;margin:0 0 19px}.field{width:100%;height:46px;margin-bottom:10px;border:1px solid #c2d3ef21;border-radius:10px;background:#091321;color:var(--text);outline:none;padding:0 14px}.field:focus{border-color:#42e8d58c;box-shadow:0 0 0 3px #42e8d510}.field::placeholder{color:#63718a}.primary{height:46px;width:100%;border:0;border-radius:10px;background:linear-gradient(100deg,#51efd9,#31cfbf);color:#071b1a;font-weight:900;letter-spacing:.04em;cursor:pointer;box-shadow:0 8px 25px #42e8d526}.primary:hover{filter:brightness(1.06);transform:translateY(-1px)}.primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:15px;align-items:start}.game-panel,.side-panel{background:linear-gradient(145deg,rgba(18,28,46,.97),rgba(11,18,32,.98));border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 18px 65px #0005}.game-top{height:58px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);background:#ffffff04}.mode-label{display:flex;align-items:center;gap:9px;min-width:0}.mode-icon{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:#42e8d51a;color:var(--mint);font-size:17px}.mode-title{font-size:12px;font-weight:900;letter-spacing:.1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mode-sub{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.06em}.timer{font:600 14px 'DM Mono',monospace;color:var(--mint);background:#42e8d511;border:1px solid #42e8d533;border-radius:9px;padding:8px 12px;min-width:74px;text-align:center}.canvas-wrap{position:relative;padding:12px;background:#080e19}.canvas-frame{position:relative;overflow:hidden;border:1px solid #ffffff12;border-radius:13px;background:#0c1523;box-shadow:inset 0 0 60px #0008}canvas{display:block;width:100%;height:auto;aspect-ratio:8/5;touch-action:none;contain:strict}
+/* Full-screen skin selection */
+.skin-screen{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#526cae 0%,#283b72 42%,#10172f 100%);overflow:auto}
+.skin-screen:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#ffffff12 1px,transparent 1px),linear-gradient(45deg,#ffffff0b 1px,transparent 1px);background-size:44px 44px;opacity:.5;pointer-events:none}
+.skin-screen-inner{position:relative;width:min(1220px,100%);text-align:center}
+.skin-screen-head{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:26px;min-height:90px}
+.skin-screen-title{margin:0;color:#fff;font-size:clamp(38px,6vw,76px);font-weight:1000;letter-spacing:.015em;line-height:1;text-shadow:0 5px 0 #080b16,3px 7px 0 #080b16,-3px 7px 0 #080b16,0 10px 24px #0008}
+.skin-back{position:absolute;left:0;top:0;height:58px;padding:0 22px;border:3px solid #080b16;border-radius:19px;background:linear-gradient(145deg,#48568d,#29345f);color:white;font-size:19px;font-weight:1000;text-shadow:0 2px #080b16;box-shadow:0 5px 0 #080b16;cursor:pointer}
+.skin-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;max-width:1110px;margin:0 auto}
+.skin-big-card{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;min-height:450px;padding:0 14px 16px;border:4px solid #080b16;border-radius:27px;background:linear-gradient(180deg,#18213dcf,#6375b8b8);box-shadow:0 7px 0 #080b16,inset 0 0 0 2px #ffffff24;overflow:hidden;cursor:pointer;color:white;transition:transform .15s,border-color .15s}
+.skin-big-card:hover{transform:translateY(-4px)}.skin-big-card.active{border-color:#5cff4c;box-shadow:0 7px 0 #080b16,inset 0 0 0 3px #b6ff9c88,0 0 22px #62ff4c66}
+.skin-big-name{width:calc(100% + 28px);min-height:91px;margin:0 -14px 10px;padding:15px 8px 10px;background:#10172dbb;border-bottom:2px solid #080b16;font-size:clamp(17px,2vw,27px);font-weight:1000;line-height:1.2;text-shadow:0 3px #080b16}
+.skin-preview-stage{height:235px;width:100%;display:grid;place-items:center;position:relative;flex:1}
+.skin-preview-stage:after{content:"";position:absolute;bottom:20px;width:72%;height:26px;border-radius:50%;background:#11182d88;filter:blur(2px)}
+.skin-preview-emoji{position:relative;z-index:1;font-size:clamp(105px,13vw,165px);line-height:1;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}
+.skin-card-select{position:relative;z-index:2;width:100%;height:67px;border:3px solid #080b16;border-radius:25px;background:linear-gradient(180deg,#4f8df2,#3160c8);box-shadow:0 5px 0 #080b16;color:white;font-size:31px;font-weight:1000;text-shadow:0 3px #080b16;cursor:pointer}
+.skin-big-card.active .skin-card-select{background:linear-gradient(180deg,#5cf04c,#21c92f)}
+.skin-check{position:absolute;right:9px;top:96px;z-index:3;width:58px;height:58px;border-radius:50%;display:none;place-items:center;background:#22db38;border:4px solid #080b16;color:white;font-size:38px;font-weight:1000;text-shadow:0 2px #08751b;box-shadow:0 3px 0 #080b16}
+.skin-big-card.active .skin-check{display:grid}
+.skin-screen-foot{margin:32px 0 0;color:#fff;font-size:clamp(21px,3vw,34px);font-weight:1000;text-shadow:0 3px #080b16,0 5px 10px #0008}
+.skin-current{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 13px;padding:10px 12px;border:1px solid #42e8d54a;border-radius:11px;background:#42e8d510;color:#b8fff4;font-size:11px;font-weight:900}
+.skin-change{border:1px solid #42e8d56b;border-radius:8px;background:#42e8d51c;color:#74f6e5;padding:7px 10px;font-size:10px;font-weight:1000;cursor:pointer;white-space:nowrap}
+@media(max-width:760px){.skin-screen{padding:16px 12px}.skin-screen-head{justify-content:flex-end;margin-bottom:18px;min-height:58px}.skin-screen-title{font-size:clamp(31px,8vw,52px);margin-left:90px}.skin-back{height:45px;padding:0 12px;font-size:14px;border-radius:14px}.skin-card-grid{gap:10px}.skin-big-card{min-height:330px;padding:0 8px 10px;border-width:3px;border-radius:18px}.skin-big-name{width:calc(100% + 16px);margin:0 -8px 5px;min-height:70px;padding:10px 4px;font-size:clamp(12px,2.8vw,18px)}.skin-preview-stage{height:165px}.skin-preview-emoji{font-size:clamp(62px,14vw,105px)}.skin-card-select{height:48px;font-size:21px;border-radius:15px;border-width:2px}.skin-check{top:74px;right:5px;width:38px;height:38px;font-size:25px;border-width:3px}.skin-screen-foot{margin-top:22px}}
+@media(max-width:480px){.skin-card-grid{grid-template-columns:1fr;max-width:330px}.skin-big-card{min-height:250px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;column-gap:8px;align-items:center}.skin-big-name{grid-column:1/-1;min-height:auto}.skin-preview-stage{height:130px}.skin-preview-emoji{font-size:85px}.skin-card-select{width:100%;font-size:19px}.skin-check{top:54px}.skin-screen-foot{font-size:21px}}
+
+.join-overlay{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;background:#050914b8;backdrop-filter:blur(7px)}.join-card{width:min(410px,100%);padding:28px 27px 24px;background:linear-gradient(145deg,#152238f5,#0e1727f5);border:1px solid #d0e1ff26;border-radius:19px;box-shadow:0 25px 90px #000a;text-align:center}.join-emblem{width:54px;height:54px;margin:0 auto 13px;border-radius:17px;display:grid;place-items:center;background:#42e8d51b;border:1px solid #42e8d54a;color:var(--mint);font-size:28px}.join-card h2{font-size:23px;margin:0 0 7px;font-weight:900}.join-card p{font-size:12px;color:#9baac2;line-height:1.65;margin:0 0 19px}.field{width:100%;height:46px;margin-bottom:10px;border:1px solid #c2d3ef21;border-radius:10px;background:#091321;color:var(--text);outline:none;padding:0 14px}.field:focus{border-color:#42e8d58c;box-shadow:0 0 0 3px #42e8d510}.field::placeholder{color:#63718a}.primary{height:46px;width:100%;border:0;border-radius:10px;background:linear-gradient(100deg,#51efd9,#31cfbf);color:#071b1a;font-weight:900;letter-spacing:.04em;cursor:pointer;box-shadow:0 8px 25px #42e8d526}.primary:hover{filter:brightness(1.06);transform:translateY(-1px)}.primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .skin-picker{margin:0 0 15px;text-align:left}
 .skin-picker-title{font-size:10px;font-weight:900;letter-spacing:.12em;color:#aab8ce;margin:0 0 8px}
 .skin-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
@@ -25,6 +50,20 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 </style>
 </head>
 <body>
+<div class="skin-screen" id="skinScreen" aria-label="Karakter seçimi">
+  <div class="skin-screen-inner">
+    <div class="skin-screen-head"><button class="skin-back" id="skinBackButton" type="button">⬅ GERİ DÖN</button><h1 class="skin-screen-title">SKİN SEÇİMİ</h1></div>
+    <div class="skin-card-grid" id="skinOptions">
+      <button class="skin-big-card active" type="button" data-skin="tooth"><span class="skin-check">✓</span><span class="skin-big-name">Çürük Dişli<br>Tek Kaşlı</span><span class="skin-preview-stage"><span class="skin-preview-emoji">🧟</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="hair"><span class="skin-check">✓</span><span class="skin-big-name">Uzun Saçlı<br>Tek Kaşlı</span><span class="skin-preview-stage"><span class="skin-preview-emoji">🧑🏻‍🦱</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="pink"><span class="skin-check">✓</span><span class="skin-big-name">Pembe İnsan</span><span class="skin-preview-stage"><span class="skin-preview-emoji">🩷</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="ghost"><span class="skin-check">✓</span><span class="skin-big-name">Korkak Hayalet</span><span class="skin-preview-stage"><span class="skin-preview-emoji">👻</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="alien"><span class="skin-check">✓</span><span class="skin-big-name">Marslı Kafa</span><span class="skin-preview-stage"><span class="skin-preview-emoji">👽</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="wizard"><span class="skin-check">✓</span><span class="skin-big-name">Şaşkın Büyücü</span><span class="skin-preview-stage"><span class="skin-preview-emoji">🧙</span></span><span class="skin-card-select">SEÇ</span></button>
+    </div>
+    <div class="skin-screen-foot">Favori karakterini seç!</div>
+  </div>
+</div>
 <main class="app">
   <header>
     <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
@@ -37,18 +76,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
         <div class="canvas-frame">
           <canvas id="arena" width="960" height="600" aria-label="Mini Arena oyun alanı"></canvas>
           <div class="canvas-status"><i class="status-dot" id="phaseDot"></i><span id="phaseLabel">ODA BEKLENİYOR</span></div>
-          <div class="join-overlay" id="joinOverlay">
+          <div class="join-overlay hidden" id="joinOverlay">
             <div class="join-card">
               <div class="join-emblem">✦</div><h2>Mini Arena'ya hoş geldin</h2>
               <p>Bir oda oluştur veya 6 haneli davet koduyla katıl. En fazla 4 kişi, 8 farklı mini oyun!</p>
-              <div class="skin-picker">
-                <div class="skin-picker-title">KARAKTERİNİ SEÇ</div>
-                <div class="skin-options" id="skinOptions">
-                  <button class="skin-option active" type="button" data-skin="tooth"><span class="skin-face">🦷</span>Çürük Dişli<small>Tek kaşlı</small></button>
-                  <button class="skin-option" type="button" data-skin="hair"><span class="skin-face">🧑🏻‍🦱</span>Uzun Saçlı<small>Tek kaşlı</small></button>
-                  <button class="skin-option" type="button" data-skin="pink"><span class="skin-face">🩷</span>Pembe İnsan<small>Pembe ten</small></button>
-                </div>
-              </div>
+              <div class="skin-current"><span id="selectedSkinLabel">Seçilen karakter: Çürük Dişli</span><button class="skin-change" id="changeSkinButton" type="button">SKİN DEĞİŞTİR</button></div>
               <input class="field" id="nameInput" maxlength="14" placeholder="Oyuncu adın" autocomplete="nickname" required>
               <button class="primary" id="createRoomButton" type="button">ODA OLUŞTUR&nbsp; ✦</button>
               <div style="display:flex;align-items:center;gap:10px;margin:15px 0;color:#71819a;font-size:10px;font-weight:800;letter-spacing:.12em"><span style="height:1px;background:#ffffff20;flex:1"></span>YA DA DAVET KODUYLA KATIL<span style="height:1px;background:#ffffff20;flex:1"></span></div>
@@ -112,18 +144,25 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     floor:{icon:'🧊',action:'ZIPLA',instruction:'Üzerinde durduğun karo 0,68 saniyede çatlayıp çöker. Sürekli hareket et! SPACE ile kısa kalkanlı sıçrama yap. 2 canın var; hayatta kaldıkça puan kazanırsın.',sub:'ÇÖKEN KAROLARDAN KAÇ',accent:'#70d6ff'}
   };
   let state = null, previousState = null, renderState = null, token = null, input = {x:0,y:0,action:false}, keys = new Set();
-  const SKIN_IDS = ['tooth','hair','pink'];
+  const SKIN_IDS = ['tooth','hair','pink','ghost','alien','wizard'];
+  const SKIN_NAMES = {tooth:'Çürük Dişli',hair:'Uzun Saçlı',pink:'Pembe İnsan',ghost:'Korkak Hayalet',alien:'Marslı Kafa',wizard:'Şaşkın Büyücü'};
   let selectedSkin = SKIN_IDS.includes(localStorage.getItem('miniArenaSkin')) ? localStorage.getItem('miniArenaSkin') : 'tooth';
   function setSelectedSkin(id) {
     if (!SKIN_IDS.includes(id)) return;
     selectedSkin = id;
     localStorage.setItem('miniArenaSkin', id);
-    document.querySelectorAll('.skin-option').forEach(b => b.classList.toggle('active', b.dataset.skin === id));
+    document.querySelectorAll('.skin-big-card').forEach(b => b.classList.toggle('active', b.dataset.skin === id));
+    $('selectedSkinLabel').textContent = 'Seçilen karakter: ' + SKIN_NAMES[id];
   }
   $('skinOptions').addEventListener('click', ev => {
     const button = ev.target.closest('[data-skin]');
-    if (button) setSelectedSkin(button.dataset.skin);
+    if (!button) return;
+    setSelectedSkin(button.dataset.skin);
+    $('skinScreen').classList.add('hidden');
+    $('joinOverlay').classList.remove('hidden');
   });
+  $('skinBackButton').addEventListener('click', () => { $('skinScreen').classList.add('hidden'); $('joinOverlay').classList.remove('hidden'); });
+  $('changeSkinButton').addEventListener('click', () => $('skinScreen').classList.remove('hidden'));
   setSelectedSkin(selectedSkin);
 
   let pollBusy = false, inputBusy = false, lastStateAt = 0, lastPollRequestAt = 0, lastFrameRequestAt = 0, lastRenderAt = 0, lastUiAt = 0, rosterSignature = '', cachedMode = null, toastTimer = null;
@@ -183,7 +222,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
       const name = $('nameInput').value.trim() || 'Oyuncu';
       const result = await api('/api/create-room', {name, skin:selectedSkin});
       token = result.token; sessionStorage.setItem('miniArenaToken', token);
-      $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden');
+      $('skinScreen').classList.add('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden');
       await pollState(); showToast('Odan hazır! Davet kodun: ' + result.code);
     } catch (e) { setError(e.message); }
     finally { button.disabled = false; button.textContent = 'ODA OLUŞTUR  ✦'; }
@@ -194,7 +233,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
       const name = $('nameInput').value.trim() || 'Oyuncu';
       const code = $('codeInput').value.trim().toUpperCase();
       const result = await api('/api/join', {name, code, skin:selectedSkin}); token = result.token; sessionStorage.setItem('miniArenaToken', token);
-      $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden'); showToast('Arenaya katıldın!'); await pollState();
+      $('skinScreen').classList.add('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden'); showToast('Arenaya katıldın!'); await pollState();
     } catch (e) { setError(e.message); }
     finally { $('joinButton').disabled = false; $('joinButton').textContent = 'OYUNA KATIL  →'; }
   });
@@ -219,11 +258,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   });
   $('leaveButton').addEventListener('click', async () => {
     try { if (token) await api('/api/leave', {}); } catch {}
-    token = null; sessionStorage.removeItem('miniArenaToken'); state = null; keys.clear(); input = {x:0,y:0,action:false}; $('joinOverlay').classList.remove('hidden'); $('leaveButton').classList.add('hidden'); showToast('Odadan ayrıldın.'); pollState();
+    token = null; sessionStorage.removeItem('miniArenaToken'); state = null; keys.clear(); input = {x:0,y:0,action:false}; $('skinScreen').classList.remove('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.add('hidden'); showToast('Odadan ayrıldın.'); pollState();
   });
   async function rejoin() {
     if (!token) return;
-    try { await api('/api/rejoin', {token}); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden'); }
+    try { await api('/api/rejoin', {token}); $('skinScreen').classList.add('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.remove('hidden'); }
     catch { token = null; sessionStorage.removeItem('miniArenaToken'); }
   }
   async function pollState() {
@@ -232,7 +271,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     lastPollRequestAt = now; pollBusy = true;
     try {
       const s = await api('/api/state');
-      if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('joinOverlay').classList.remove('hidden'); $('leaveButton').classList.add('hidden'); }
+      if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('skinScreen').classList.remove('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.add('hidden'); }
       acceptState(s);
     } catch(e) { $('connectionText').textContent = 'Sunucu bağlantısı yok'; $('phaseLabel').textContent = 'BAĞLANTI KESİLDİ'; }
     finally { pollBusy = false; }
@@ -249,7 +288,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     input = {x,y,action,skin:selectedSkin}; inputBusy = true;
     try {
       const s = await api('/api/frame', input);
-      if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('joinOverlay').classList.remove('hidden'); $('leaveButton').classList.add('hidden'); }
+      if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('skinScreen').classList.remove('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.add('hidden'); }
       acceptState(s);
     } catch { /* the slower state poll reports connection status */ }
     finally { inputBusy = false; }
@@ -351,8 +390,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     const x=p.x, y=p.y;
     ctx.save();
     // Body and head
-    const skinTone = skin === 'pink' ? '#ff70b7' : '#f0c7a7';
-    ctx.fillStyle = skin === 'tooth' ? '#a99b8c' : skin === 'hair' ? '#22232c' : '#ff70b7';
+    const skinTone = skin === 'pink' ? '#ff70b7' : skin === 'ghost' ? '#baf9ff' : skin === 'alien' ? '#8be56e' : '#f0c7a7';
+    ctx.fillStyle = skin === 'tooth' ? '#a99b8c' : skin === 'hair' ? '#22232c' : skin === 'pink' ? '#ff70b7' : skin === 'ghost' ? '#a9f4ff' : skin === 'alien' ? '#6fcf58' : skin === 'wizard' ? '#5b3b91' : '#f0c7a7';
     ctx.beginPath(); ctx.ellipse(x,y+12,15,13,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = skinTone; ctx.beginPath(); ctx.arc(x,y-5,17,0,Math.PI*2); ctx.fill();
     ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
@@ -364,6 +403,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
       ctx.quadraticCurveTo(x+11,y+27,x+8,y+5); ctx.lineTo(x-12,y+8); ctx.quadraticCurveTo(x-22,y+28,x-22,y+4); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle=skinTone; ctx.beginPath(); ctx.arc(x,y-4,14,0,Math.PI*2); ctx.fill();
       ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
+    }
+    if (skin === 'ghost') {
+      ctx.globalAlpha = .82; ctx.fillStyle='#c8fbff'; ctx.beginPath(); ctx.arc(x,y-6,17,Math.PI,0); ctx.lineTo(x+17,y+13); ctx.lineTo(x+8,y+8); ctx.lineTo(x,y+15); ctx.lineTo(x-8,y+8); ctx.lineTo(x-17,y+13); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+    } else if (skin === 'alien') {
+      ctx.strokeStyle='#75e85e'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x-7,y-19); ctx.lineTo(x-12,y-29); ctx.moveTo(x+7,y-19); ctx.lineTo(x+12,y-29); ctx.stroke(); ctx.fillStyle='#ffef72'; ctx.beginPath(); ctx.arc(x-12,y-30,3,0,Math.PI*2); ctx.arc(x+12,y-30,3,0,Math.PI*2); ctx.fill();
+    } else if (skin === 'wizard') {
+      ctx.fillStyle='#4b2c83'; ctx.strokeStyle='#20143b'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x-19,y-17); ctx.lineTo(x+1,y-48); ctx.lineTo(x+19,y-17); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle='#ffd75e'; ctx.beginPath(); ctx.arc(x+1,y-34,3,0,Math.PI*2); ctx.fill();
     }
     // Eyes
     ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(x-6,y-5,3.2,4.5,0,0,Math.PI*2); ctx.ellipse(x+6,y-5,3.2,4.5,0,0,Math.PI*2); ctx.fill();
