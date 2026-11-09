@@ -34,6 +34,12 @@ let roundEndsAt = null;
 let countdownEndsAt = null;
 let resultText = '';
 let roundNumber = 1;
+const MAPS = { neon:'Neon Şehir', desert:'Çöl', ice:'Buzul', space:'Uzay' };
+let mapId = 'neon';
+let seriesLength = 3;
+let seriesWins = {};
+let arenaEvent = { id:'normal', title:'Normal tempo', endsAt:0 };
+let nextArenaEventAt = 0;
 let bullets = [];
 let gems = [];
 let hazards = [];
@@ -108,7 +114,7 @@ function resetPlayer(p) {
   p.vx = 0; p.vy = 0; p.angle = s.a;
   p.hp = 3; p.lives = 3; p.alive = true; p.respawnAt = 0;
   p.invulnerableUntil = Date.now() + 1200;
-  p.powerUntil = 0; p.controlMs = 0; p.score = 0; p.kos = 0; p.deaths = 0;
+  p.powerUntil = 0; p.controlMs = 0; p.score = 0; p.kos = 0; p.deaths = 0; p.hits = 0; p.goals = 0; p.gems = 0;
   p.input = { x: 0, y: 0, action: false }; p.actionWasDown = false; p.actionReadyAt = 0;
 }
 function cleanSkin(value) { return ['tooth', 'hair', 'pink', 'ghost', 'alien', 'wizard'].includes(value) ? value : 'tooth'; }
@@ -116,7 +122,7 @@ function createPlayer(name, skin) {
   const slot = [0, 1, 2, 3].find(n => ![...players.values()].some(p => p.slot === n));
   if (slot === undefined) return null;
   const id = crypto.randomUUID();
-  const p = { id, slot, name: cleanName(name), skin: cleanSkin(skin), color: COLORS[slot], x: 0, y: 0, vx: 0, vy: 0, angle: 0, score: 0, hp: 3, lives: 3, alive: true, respawnAt: 0, invulnerableUntil: 0, powerUntil: 0, controlMs: 0, kos: 0, deaths: 0, lastHitBy: null, input: { x: 0, y: 0, action: false }, actionWasDown: false, actionReadyAt: 0, lastSeen: Date.now(), lastInputAt: Date.now() };
+  const p = { id, slot, name: cleanName(name), skin: cleanSkin(skin), color: COLORS[slot], x: 0, y: 0, vx: 0, vy: 0, angle: 0, score: 0, hp: 3, lives: 3, alive: true, respawnAt: 0, invulnerableUntil: 0, powerUntil: 0, controlMs: 0, kos: 0, deaths: 0, hits: 0, goals: 0, gems: 0, lastHitBy: null, input: { x: 0, y: 0, action: false }, actionWasDown: false, actionReadyAt: 0, lastSeen: Date.now(), lastInputAt: Date.now() };
   resetPlayer(p);
   players.set(id, p);
   if (!hostId) hostId = id;
@@ -162,6 +168,7 @@ function beginCountdown() {
   if (players.size < 2) return { error: 'Başlamak için en az 2 oyuncu gerekli.' };
   if (phase === 'running' || phase === 'countdown') return { error: 'Tur zaten başladı.' };
   resetWorld();
+  arenaEvent = {id:'normal',title:'Normal tempo',endsAt:0}; nextArenaEventAt = Date.now()+9000;
   phase = 'countdown';
   countdownEndsAt = Date.now() + 3200;
   resultText = '';
@@ -178,6 +185,8 @@ function finishRound(reason) {
   }
   if (reason === 'target') resultText += ' · Hedefe ilk ulaşan!';
   if (reason === 'last') resultText += ' · Son kalan kazandı!';
+  const winner = [...list].sort((a,b)=>b.score-a.score || b.kos-a.kos)[0];
+  if (winner) { seriesWins[winner.id] = (seriesWins[winner.id] || 0) + 1; const wins = seriesWins[winner.id]; resultText += ` · Seri: ${wins}/${Math.ceil(seriesLength/2)} galibiyet`; if (wins >= Math.ceil(seriesLength/2)) resultText += ' · SERİ ŞAMPİYONU!'; }
   phase = 'finished'; roundEndsAt = null; countdownEndsAt = null;
 }
 function checkTarget() {
@@ -186,6 +195,8 @@ function checkTarget() {
   const winner = [...players.values()].find(p => p.score >= m.target);
   if (winner) finishRound('target');
 }
+function cooldownFor(p, ms) { const factor = p.skin === 'alien' ? .88 : p.skin === 'wizard' ? .92 : 1; return Math.round(ms * factor); }
+function powerFor(p, ms) { return Math.round(ms * (p.skin === 'tooth' ? 1.12 : p.skin === 'pink' ? 1.08 : 1)); }
 function actionReady(p, now) {
   const down = Boolean(p.input.action);
   const pressed = down && !p.actionWasDown;
@@ -205,7 +216,10 @@ function movePlayer(p, dt, speed, acceleration = 10) {
   const len = Math.hypot(ix, iy);
   const nx = len > 0 ? ix / len : 0, ny = len > 0 ? iy / len : 0;
   if (len > 0.08) p.angle = Math.atan2(ny, nx);
-  const targetVx = nx * speed, targetVy = ny * speed;
+  const passiveSpeed = p.skin === 'hair' ? 1.07 : p.skin === 'ghost' ? 1.035 : p.skin === 'wizard' ? 1.025 : 1;
+  const eventSpeed = arenaEvent.id === 'turbo' ? 1.18 : arenaEvent.id === 'slow' ? .86 : 1;
+  const finalSpeed = speed * passiveSpeed * eventSpeed;
+  const targetVx = nx * finalSpeed, targetVy = ny * finalSpeed;
   const blend = Math.min(1, acceleration * dt);
   p.vx += (targetVx - p.vx) * blend;
   p.vy += (targetVy - p.vy) * blend;
@@ -232,7 +246,8 @@ function collidePlayers(pushScale = 1) {
     const nx = dx / d, ny = dy / d, overlap = min - d;
     a.x -= nx * overlap * .5; a.y -= ny * overlap * .5;
     b.x += nx * overlap * .5; b.y += ny * overlap * .5;
-    let strength = (115 + (a.powerUntil > Date.now() ? 250 : 0) + (b.powerUntil > Date.now() ? 250 : 0)) * pushScale;
+    let eventPush = arenaEvent.id === 'brawl' ? 1.32 : 1;
+    let strength = (115 + (a.powerUntil > Date.now() ? 250 : 0) + (b.powerUntil > Date.now() ? 250 : 0)) * pushScale * eventPush;
     a.vx -= nx * strength * .08; a.vy -= ny * strength * .08;
     b.vx += nx * strength * .08; b.vy += ny * strength * .08;
     const now = Date.now();
@@ -251,7 +266,7 @@ function tickTank(dt, now) {
   for (const p of players.values()) {
     movePlayer(p, dt, 205, 12); keepInBounds(p);
     if (actionReady(p, now)) {
-      p.actionReadyAt = now + 570;
+      p.actionReadyAt = now + cooldownFor(p, 570);
       const speed = 570;
       bullets.push({ id: crypto.randomUUID(), owner: p.id, x: p.x + Math.cos(p.angle) * 29, y: p.y + Math.sin(p.angle) * 29, vx: Math.cos(p.angle) * speed, vy: Math.sin(p.angle) * speed, life: 1.45, r: 7 });
     }
@@ -262,7 +277,7 @@ function tickTank(dt, now) {
     for (const p of players.values()) {
       if (p.id === b.owner || !p.alive || now < p.invulnerableUntil) continue;
       if (Math.hypot(p.x - b.x, p.y - b.y) < 25) {
-        p.hp--; p.vx += b.vx * .16; p.vy += b.vy * .16; p.lastHitBy = b.owner;
+        p.hp--; const shooterForStat = players.get(b.owner); if (shooterForStat) shooterForStat.hits++; p.vx += b.vx * .16; p.vy += b.vy * .16; p.lastHitBy = b.owner;
         if (p.hp <= 0) {
           const attacker = players.get(b.owner); if (attacker) { attacker.score++; attacker.kos++; }
           p.deaths++; p.hp = 2; p.x = spawnFor(p.slot).x; p.y = spawnFor(p.slot).y; p.vx = 0; p.vy = 0; p.invulnerableUntil = now + 2200;
@@ -276,7 +291,7 @@ function tickSumo(dt, now) {
   for (const p of players.values()) {
     if (p.lives <= 0) { p.alive = false; continue; }
     movePlayer(p, dt, 190, 9);
-    if (actionReady(p, now)) { p.actionReadyAt = now + 1850; p.powerUntil = now + 380; }
+    if (actionReady(p, now)) { p.actionReadyAt = now + cooldownFor(p, 1850); p.powerUntil = now + powerFor(p, 380); }
   }
   collidePlayers(1.25);
   const cx = WORLD.width / 2, cy = WORLD.height / 2, radius = 236;
@@ -294,7 +309,7 @@ function tickPush(dt, now) {
   for (const p of players.values()) {
     movePlayer(p, dt, 220, 12); keepInBounds(p);
     if (actionReady(p, now)) {
-      p.actionReadyAt = now + 2450; p.powerUntil = now + 260;
+      p.actionReadyAt = now + cooldownFor(p, 2450); p.powerUntil = now + powerFor(p, 260);
       for (const other of players.values()) {
         if (other.id === p.id || !other.alive) continue;
         const dx = other.x - p.x, dy = other.y - p.y, d = Math.hypot(dx, dy);
@@ -314,7 +329,7 @@ function tickSoccer(dt, now) {
   for (const p of players.values()) {
     movePlayer(p, dt, 225, 11); keepInBounds(p, 30);
     if (actionReady(p, now)) {
-      p.actionReadyAt = now + 580;
+      p.actionReadyAt = now + cooldownFor(p, 580);
       const dx = ball.x - p.x, dy = ball.y - p.y, d = Math.hypot(dx, dy);
       if (d < 90) {
         let ax = Math.cos(p.angle), ay = Math.sin(p.angle);
@@ -335,7 +350,7 @@ function tickSoccer(dt, now) {
   if (conceded !== null) {
     const shooter = scoring && players.get(scoring);
     const goalkeeper = [...players.values()].find(p => p.slot === conceded);
-    if (shooter) shooter.score += shooter === goalkeeper ? -1 : 1;
+    if (shooter) { shooter.score += shooter === goalkeeper ? -1 : 1; if (shooter !== goalkeeper) shooter.goals++; }
     ball.x = WORLD.width / 2; ball.y = WORLD.height / 2; ball.vx = 0; ball.vy = 0; ball.lastKickBy = null;
   }
   if (ball.x < 16 || ball.x > WORLD.width - 16) { ball.vx *= -.7; ball.x = clamp(ball.x, 16, WORLD.width - 16); }
@@ -345,14 +360,14 @@ function tickGems(dt, now) {
   for (const p of players.values()) {
     const dash = p.powerUntil > now;
     movePlayer(p, dt, dash ? 350 : 205, 12); keepInBounds(p);
-    if (actionReady(p, now)) { p.actionReadyAt = now + 1750; p.powerUntil = now + 330; }
+    if (actionReady(p, now)) { p.actionReadyAt = now + cooldownFor(p, 1750); p.powerUntil = now + powerFor(p, 330); }
   }
   for (let i = gems.length - 1; i >= 0; i--) {
     const g = gems[i];
     for (const p of players.values()) {
       if (!p.alive) continue;
       if (Math.hypot(p.x - g.x, p.y - g.y) < 29) {
-        p.score += g.kind === 'bonus' ? 3 : 1;
+        p.score += g.kind === 'bonus' ? 3 : 1; p.gems++;
         gems.splice(i, 1); gems.push(makeGem()); break;
       }
     }
@@ -364,7 +379,7 @@ function tickSurvival(dt, now) {
     if (!p.alive) continue;
     movePlayer(p, dt, p.powerUntil > now ? 370 : 220, 13); keepInBounds(p);
     if (actionReady(p, now)) {
-      p.actionReadyAt = now + 1850; p.powerUntil = now + 430;
+      p.actionReadyAt = now + cooldownFor(p, 1850); p.powerUntil = now + powerFor(p, 430);
     }
   }
   if (now >= survivalNextHazardAt && hazards.length < 18) {
@@ -421,16 +436,16 @@ function tickHotPotato(dt, now) {
     if (!p.alive) continue;
     movePlayer(p, dt, p.powerUntil > now ? 300 : 220, 12); keepInBounds(p);
     if (actionReady(p, now)) {
-      p.actionReadyAt = now + 720;
+      p.actionReadyAt = now + cooldownFor(p, 720);
       if (p.id === bombHolderId) {
         let nearest = null, nearestDistance = 145;
         for (const other of players.values()) if (other.alive && other.id !== p.id) {
           const d = Math.hypot(other.x - p.x, other.y - p.y);
           if (d < nearestDistance) { nearestDistance = d; nearest = other; }
         }
-        if (nearest) { bombHolderId = nearest.id; p.score++; p.powerUntil = now + 180; }
-        else { p.powerUntil = now + 280; p.vx += Math.cos(p.angle) * 150; p.vy += Math.sin(p.angle) * 150; }
-      } else { p.powerUntil = now + 220; }
+        if (nearest) { bombHolderId = nearest.id; p.score++; p.powerUntil = now + powerFor(p, 180); }
+        else { p.powerUntil = now + powerFor(p, 280); p.vx += Math.cos(p.angle) * 150; p.vy += Math.sin(p.angle) * 150; }
+      } else { p.powerUntil = now + powerFor(p, 220); }
     }
   }
   let holder = players.get(bombHolderId);
@@ -465,7 +480,7 @@ function tickFloor(dt, now) {
   for (const p of players.values()) {
     if (!p.alive) continue;
     movePlayer(p, dt, p.powerUntil > now ? 360 : 235, 13); keepInBounds(p, 12);
-    if (actionReady(p, now)) { p.actionReadyAt = now + 1450; p.powerUntil = now + 260; }
+    if (actionReady(p, now)) { p.actionReadyAt = now + cooldownFor(p, 1450); p.powerUntil = now + powerFor(p, 260); }
     const tile = floorTiles[floorIndexAt(p.x, p.y)];
     if (!tile || !tile.alive) { loseFloorLife(p, now); continue; }
     if (!tile.crackAt) tile.crackAt = now + 680;
@@ -501,6 +516,7 @@ function tick() {
     return;
   }
   if (phase !== 'running') return;
+  if (!nextArenaEventAt || now >= nextArenaEventAt) { const events=[{id:'normal',title:'Normal tempo'},{id:'turbo',title:'Herkes hızlandı!'},{id:'slow',title:'Ağır çekim!'},{id:'bonus',title:'Çılgın arena!'}]; arenaEvent=events[Math.floor(Math.random()*events.length)]; arenaEvent.endsAt=now+14000; nextArenaEventAt=now+14000; }
   if (modeId === 'tank') tickTank(dt, now);
   else if (modeId === 'sumo') tickSumo(dt, now);
   else if (modeId === 'push') tickPush(dt, now);
@@ -523,9 +539,9 @@ function publicState(req) {
     world: WORLD, roomCode: self ? ROOM_CODE : null, mode: modeId, modes: MODES, phase,
     timeLeft: phase === 'running' ? Math.max(0, roundEndsAt - now) : 0,
     countdown: phase === 'countdown' ? Math.max(0, countdownEndsAt - now) : 0,
-    resultText, roundNumber, maxPlayers: MAX_PLAYERS, playersCount: players.size,
+    resultText, roundNumber, maxPlayers: MAX_PLAYERS, playersCount: players.size, mapId, maps: MAPS, seriesLength, seriesWins, arenaEvent: {id:arenaEvent.id,title:arenaEvent.title,timeLeft:Math.max(0,arenaEvent.endsAt-now)},
     hostId, selfId: self ? self.id : null, isHost: Boolean(self && self.id === hostId),
-    players: [...players.values()].map(p => ({ id: p.id, name: p.name, skin: p.skin, color: p.color, slot: p.slot, x: p.x, y: p.y, angle: p.angle, vx: p.vx, vy: p.vy, score: p.score, hp: p.hp, lives: p.lives, alive: p.alive, power: p.powerUntil > now, cooldownLeft: Math.max(0, p.actionReadyAt - now), controlMs: p.controlMs, isHost: p.id === hostId, invulnerable: p.invulnerableUntil > now })),
+    players: [...players.values()].map(p => ({ id: p.id, name: p.name, skin: p.skin, color: p.color, slot: p.slot, x: p.x, y: p.y, angle: p.angle, vx: p.vx, vy: p.vy, score: p.score, hits:p.hits, goals:p.goals, gems:p.gems, kos:p.kos, deaths:p.deaths, seriesWins:seriesWins[p.id]||0, hp: p.hp, lives: p.lives, alive: p.alive, power: p.powerUntil > now, cooldownLeft: Math.max(0, p.actionReadyAt - now), controlMs: p.controlMs, isHost: p.id === hostId, invulnerable: p.invulnerableUntil > now })),
     bullets: bullets.map(b => ({ x: b.x, y: b.y, r: b.r })),
     gems: gems.map(g => ({ x: g.x, y: g.y, kind: g.kind, pulse: g.pulse })),
     hazards: hazards.map(h => ({ x: h.x, y: h.y, r: h.r, phase: h.phase, hunter: Boolean(h.hunter) })),
@@ -569,7 +585,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await readBody(req);
       if (ROOM_CODE && players.size > 0) return sendJson(res, 409, { error: 'Şu anda açık bir oda var. Arkadaşların davet koduyla katılsın.' });
-      ROOM_CODE = makeRoomCode(); modeId = 'tank'; roundNumber = 1; changePhaseToLobby();
+      ROOM_CODE = makeRoomCode(); modeId = 'tank'; roundNumber = 1; mapId='neon'; seriesLength=3; seriesWins={}; changePhaseToLobby();
       const created = createPlayer(body.name, body.skin);
       if (!created) { ROOM_CODE = null; return sendJson(res, 409, { error: 'Oda oluşturulamadı.' }); }
       return sendJson(res, 201, { ...created, code: ROOM_CODE });
@@ -611,6 +627,12 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req); if (!MODES[body.mode]) return sendJson(res, 400, { error: 'Geçersiz oyun modu.' });
       modeId = body.mode; changePhaseToLobby(); roundNumber++; return sendJson(res, 200, { ok: true });
     } catch (error) { return sendJson(res, 400, { error: error.message }); }
+  }
+  if (req.method === 'POST' && url.pathname === '/api/host/settings') {
+    const p = getPlayer(req); if (!p || p.id !== hostId) return sendJson(res,403,{error:'Ayarları yalnızca oda sahibi değiştirebilir.'});
+    if (!['lobby','finished'].includes(phase)) return sendJson(res,409,{error:'Ayarlar tur başlamadan önce değiştirilebilir.'});
+    try { const body=await readBody(req); if (body.mapId && MAPS[body.mapId]) mapId=body.mapId; if ([3,5].includes(Number(body.seriesLength))) seriesLength=Number(body.seriesLength); return sendJson(res,200,{ok:true,mapId,seriesLength}); }
+    catch(e){return sendJson(res,400,{error:e.message||'Ayar değiştirilemedi.'});}
   }
   if (req.method === 'POST' && url.pathname === '/api/host/start') {
     const p = getPlayer(req); if (!p || p.id !== hostId) return sendJson(res, 403, { error: 'Oyunu yalnızca oda sahibi başlatabilir.' });
