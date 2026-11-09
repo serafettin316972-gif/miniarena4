@@ -58,16 +58,15 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     <div class="skin-screen-head"><button class="skin-back" id="skinBackButton" type="button">⬅ GERİ DÖN</button><h1 class="skin-screen-title">SKİN SEÇİMİ</h1></div>
     <div class="skin-card-grid" id="skinOptions">
       <button class="skin-big-card active" type="button" data-skin="tooth"><span class="skin-check">✓</span><span class="skin-big-name">Çürük Dişli<br>Tek Kaşlı</span><span class="skin-preview-stage"><span class="skin-preview-emoji">🧟</span></span><span class="skin-card-select">SEÇ</span></button>
-      <button class="skin-big-card" type="button" data-skin="hair"><span class="skin-check">✓</span><span class="skin-big-name">Uzun Saçlı<br>Tek Kaşlı</span><span class="skin-preview-stage"><svg class="hair-preview-svg" viewBox="0 0 180 190" role="img" aria-label="Uzun saçlı tek kaşlı karakter">
+      <button class="skin-big-card" type="button" data-skin="hair"><span class="skin-check">✓</span><span class="skin-big-name">Uzun Saçlı<br>Tek Kaşlı</span><span class="skin-preview-stage"><svg class="hair-preview-svg" viewBox="0 0 180 190" role="img" aria-label="Dik saçlı, çok kalın tek kaşlı karakter">
   <ellipse cx="90" cy="174" rx="59" ry="9" fill="#10182d" opacity=".55"/>
   <g stroke="#080b16" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M42 94 Q18 48 54 28 Q73 4 94 24 Q119 5 139 34 Q163 54 143 105 L147 143 Q132 158 125 130 L119 91 L61 91 L55 132 Q42 157 30 139 Z" fill="#38251f"/>
-    <path d="M53 77 Q43 40 76 31 Q108 16 130 48 Q141 65 127 91 L53 91 Z" fill="#38251f"/>
-    <path d="M62 88 Q54 112 62 137 Q72 157 90 158 Q113 158 123 136 Q130 111 118 83 Q90 98 62 88 Z" fill="#f0c7a7"/>
+    <path d="M48 93 L39 57 L57 67 L55 30 L75 55 L84 12 L98 53 L119 22 L119 62 L145 43 L135 91 L137 142 Q124 157 119 128 L115 91 L65 91 L60 132 Q46 157 34 140 Z" fill="#211a18"/>
+    <path d="M53 82 Q48 48 72 42 Q96 27 119 47 Q137 61 127 91 L53 91 Z" fill="#f0c7a7"/>
   </g>
   <ellipse cx="76" cy="105" rx="5" ry="10" fill="#080b16"/>
   <ellipse cx="105" cy="105" rx="5" ry="10" fill="#080b16"/>
-  <path d="M68 87 Q89 94 113 83" fill="none" stroke="#211a1b" stroke-width="8" stroke-linecap="round"/>
+  <path d="M65 86 Q89 73 115 86" fill="none" stroke="#17100f" stroke-width="13" stroke-linecap="round"/>
   <path d="M79 133 Q91 143 104 133" fill="none" stroke="#b88762" stroke-width="6" stroke-linecap="round"/>
 </svg></span><span class="skin-card-select">SEÇ</span></button>
       <button class="skin-big-card" type="button" data-skin="pink"><span class="skin-check">✓</span><span class="skin-big-name">Pembe İnsan</span><span class="skin-preview-stage"><svg class="pink-preview-svg" viewBox="0 0 180 190" role="img" aria-label="Pembe İnsan karakteri">
@@ -105,7 +104,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 </div>
 <main class="app">
   <header>
-    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.16</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
+    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.17</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
     <div class="header-right"><div class="lan-pill"><i class="lan-dot"></i> ONLINE ARENA</div><div class="room-pill"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="copy-btn" id="copyCode" type="button">KOPYALA</button></div></div>
   </header>
   <div class="layout">
@@ -495,26 +494,15 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
 
     if (skin === 'hair') {
-      // Uzun, dalgalı saç: yüzün iki yanından omuzlara kadar iner.
-      ctx.fillStyle='#38251f'; ctx.strokeStyle='#17131a'; ctx.lineWidth=3; ctx.lineJoin='round';
+      // Keko tarzı dimdik, sivri saçlar ve kısa yanlar.
+      ctx.fillStyle='#211a18'; ctx.strokeStyle='#171014'; ctx.lineWidth=3; ctx.lineJoin='round';
       ctx.beginPath();
-      ctx.moveTo(x-15,y-13);
-      ctx.quadraticCurveTo(x-31,y-31,x-17,y-42);
-      ctx.quadraticCurveTo(x-4,y-53,x+8,y-42);
-      ctx.quadraticCurveTo(x+23,y-54,x+31,y-35);
-      ctx.quadraticCurveTo(x+39,y-19,x+25,y+2);
-      ctx.lineTo(x+24,y+27); ctx.quadraticCurveTo(x+17,y+34,x+12,y+21);
-      ctx.lineTo(x+10,y+8); ctx.lineTo(x-10,y+8);
-      ctx.lineTo(x-13,y+23); ctx.quadraticCurveTo(x-22,y+34,x-25,y+19);
-      ctx.lineTo(x-25,y-2); ctx.quadraticCurveTo(x-34,y-10,x-15,y-13);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-      // Saçın ön perçemi, kaşı kapatmayacak şekilde alnın üstünde kalır.
-      ctx.beginPath(); ctx.moveTo(x-15,y-15);
-      ctx.quadraticCurveTo(x-9,y-31,x+1,y-22);
-      ctx.quadraticCurveTo(x+13,y-13,x+19,y-19);
-      ctx.quadraticCurveTo(x+12,y-5,x-2,y-10);
-      ctx.quadraticCurveTo(x-11,y-8,x-15,y-15);
-      ctx.fill(); ctx.stroke();
+      ctx.moveTo(x-16,y-10);
+      ctx.lineTo(x-19,y-29); ctx.lineTo(x-9,y-23);
+      ctx.lineTo(x-7,y-47); ctx.lineTo(x+1,y-29);
+      ctx.lineTo(x+8,y-55); ctx.lineTo(x+13,y-29);
+      ctx.lineTo(x+27,y-43); ctx.lineTo(x+22,y-18);
+      ctx.lineTo(x+17,y-8); ctx.closePath(); ctx.fill(); ctx.stroke();
       ctx.fillStyle=skinTone; ctx.beginPath(); ctx.arc(x,y-4,14,0,Math.PI*2); ctx.fill();
       ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
     }
@@ -531,8 +519,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(x-6,y-5,3.2,4.5,0,0,Math.PI*2); ctx.ellipse(x+6,y-5,3.2,4.5,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#172238'; ctx.beginPath(); ctx.arc(x-5,y-4,1.5,0,Math.PI*2); ctx.arc(x+7,y-4,1.5,0,Math.PI*2); ctx.fill();
     // One thick eyebrow
-    ctx.strokeStyle='#211a1b'; ctx.lineWidth=skin === 'hair' ? 5.8 : 4.5; ctx.lineCap='round'; ctx.beginPath();
-    ctx.moveTo(x-10,y-13); ctx.quadraticCurveTo(x,y-18,x+10,y-13); ctx.stroke();
+    ctx.strokeStyle='#211a1b'; ctx.lineWidth=skin === 'hair' ? 8.5 : 4.5; ctx.lineCap='round'; ctx.beginPath();
+    ctx.moveTo(x-12,y-13); ctx.quadraticCurveTo(x,y-21,x+12,y-13); ctx.stroke();
     if (skin === 'tooth') {
       ctx.fillStyle='#9b554f'; ctx.beginPath(); ctx.arc(x-10,y+2,2.2,0,Math.PI*2); ctx.arc(x-5,y+5,1.8,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='#4b2823'; ctx.fillRect(x-6,y+3,12,6);
