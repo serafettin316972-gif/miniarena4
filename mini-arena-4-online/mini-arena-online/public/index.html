@@ -23,7 +23,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 .skin-big-name{width:calc(100% + 28px);min-height:91px;margin:0 -14px 10px;padding:15px 8px 10px;background:#10172dbb;border-bottom:2px solid #080b16;font-size:clamp(17px,2vw,27px);font-weight:1000;line-height:1.2;text-shadow:0 3px #080b16}
 .skin-preview-stage{height:235px;width:100%;display:grid;place-items:center;position:relative;flex:1}
 .skin-preview-stage:after{content:"";position:absolute;bottom:20px;width:72%;height:26px;border-radius:50%;background:#11182d88;filter:blur(2px)}
-.hair-preview-svg{position:relative;z-index:1;width:clamp(112px,14vw,170px);height:auto;overflow:visible;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}.pink-preview-svg{position:relative;z-index:1;width:clamp(112px,14vw,170px);height:auto;overflow:visible;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}.skin-preview-emoji{position:relative;z-index:1;font-size:clamp(105px,13vw,165px);line-height:1;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}
+.bim-preview-svg{position:relative;z-index:1;width:clamp(112px,14vw,170px);height:auto;overflow:visible;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}.hair-preview-svg{position:relative;z-index:1;width:clamp(112px,14vw,170px);height:auto;overflow:visible;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}.pink-preview-svg{position:relative;z-index:1;width:clamp(112px,14vw,170px);height:auto;overflow:visible;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}.skin-preview-emoji{position:relative;z-index:1;font-size:clamp(105px,13vw,165px);line-height:1;filter:drop-shadow(0 7px 0 #101321) drop-shadow(0 3px 3px #0008)}
 .skin-card-select{position:relative;z-index:2;width:100%;height:67px;border:3px solid #080b16;border-radius:25px;background:linear-gradient(180deg,#4f8df2,#3160c8);box-shadow:0 5px 0 #080b16;color:white;font-size:31px;font-weight:1000;text-shadow:0 3px #080b16;cursor:pointer}
 .skin-big-card.active .skin-card-select{background:linear-gradient(180deg,#5cf04c,#21c92f)}
 .skin-check{position:absolute;right:9px;top:96px;z-index:3;width:58px;height:58px;border-radius:50%;display:none;place-items:center;background:#22db38;border:4px solid #080b16;color:white;font-size:38px;font-weight:1000;text-shadow:0 2px #08751b;box-shadow:0 3px 0 #080b16}
@@ -82,14 +82,28 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 </svg></span><span class="skin-card-select">SEÇ</span></button>
       <button class="skin-big-card" type="button" data-skin="ghost"><span class="skin-check">✓</span><span class="skin-big-name">Korkak Hayalet</span><span class="skin-preview-stage"><span class="skin-preview-emoji">👻</span></span><span class="skin-card-select">SEÇ</span></button>
       <button class="skin-big-card" type="button" data-skin="alien"><span class="skin-check">✓</span><span class="skin-big-name">Marslı Kafa</span><span class="skin-preview-stage"><span class="skin-preview-emoji">👽</span></span><span class="skin-card-select">SEÇ</span></button>
-      <button class="skin-big-card" type="button" data-skin="wizard"><span class="skin-check">✓</span><span class="skin-big-name">Şaşkın Büyücü</span><span class="skin-preview-stage"><span class="skin-preview-emoji">🧙</span></span><span class="skin-card-select">SEÇ</span></button>
+      <button class="skin-big-card" type="button" data-skin="wizard"><span class="skin-check">✓</span><span class="skin-big-name">BİM Çalışanı</span><span class="skin-preview-stage"><svg class="bim-preview-svg" viewBox="0 0 180 190" role="img" aria-label="Kırmızı BİM polo tişörtlü çalışan">
+  <ellipse cx="90" cy="174" rx="58" ry="9" fill="#10182d" opacity=".55"/>
+  <g stroke="#080b16" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M69 113 L61 163 Q60 173 72 173 L86 173 L90 139 L94 173 L109 173 Q120 173 118 163 L110 113" fill="#252a35"/>
+    <path d="M68 91 Q48 94 40 116 L32 145 Q29 156 42 159 Q53 160 58 145 L67 123 L113 123 L122 145 Q127 160 139 156 Q150 152 145 139 L136 112 Q129 94 111 91 Z" fill="#ed171f"/>
+    <path d="M72 88 Q90 101 108 88 L104 107 L90 117 L76 107 Z" fill="#c81019"/>
+    <circle cx="90" cy="59" r="34" fill="#f0c7a7"/>
+  </g>
+  <path d="M58 47 Q90 54 122 46" fill="none" stroke="#17131a" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="77" cy="64" rx="4" ry="7" fill="#10131c"/><ellipse cx="103" cy="64" rx="4" ry="7" fill="#10131c"/>
+  <path d="M86 82 Q91 86 96 82" fill="none" stroke="#9b6d54" stroke-width="4" stroke-linecap="round"/>
+  <path d="M87 91 L90 105 L94 91" fill="#f7f7f7" stroke="#080b16" stroke-width="2"/>
+  <rect x="103" y="112" width="25" height="14" rx="2" fill="#fff"/>
+  <text x="115.5" y="122" text-anchor="middle" font-size="9" font-weight="900" fill="#ed171f" stroke="none">BİM</text>
+</svg></span><span class="skin-card-select">SEÇ</span></button>
     </div>
     <div class="skin-screen-foot">Favori karakterini seç!</div>
   </div>
 </div>
 <main class="app">
   <header>
-    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.11</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
+    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.12</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
     <div class="header-right"><div class="lan-pill"><i class="lan-dot"></i> ONLINE ARENA</div><div class="room-pill"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="copy-btn" id="copyCode" type="button">KOPYALA</button></div></div>
   </header>
   <div class="layout">
@@ -168,7 +182,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   };
   let state = null, previousState = null, renderState = null, token = null, input = {x:0,y:0,action:false}, keys = new Set();
   const SKIN_IDS = ['tooth','hair','pink','ghost','alien','wizard'];
-  const SKIN_NAMES = {tooth:'Çürük Dişli',hair:'Uzun Saçlı',pink:'Pembe İnsan',ghost:'Korkak Hayalet',alien:'Marslı Kafa',wizard:'Şaşkın Büyücü'};
+  const SKIN_NAMES = {tooth:'Çürük Dişli',hair:'Uzun Saçlı',pink:'Pembe İnsan',ghost:'Korkak Hayalet',alien:'Marslı Kafa',wizard:'BİM Çalışanı'};
   let selectedSkin = SKIN_IDS.includes(localStorage.getItem('miniArenaSkin')) ? localStorage.getItem('miniArenaSkin') : 'tooth';
   function setSelectedSkin(id) {
     if (!SKIN_IDS.includes(id)) return;
@@ -414,8 +428,21 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     ctx.save();
     // Body and head
     const skinTone = skin === 'pink' ? '#ff70b7' : skin === 'ghost' ? '#baf9ff' : skin === 'alien' ? '#8be56e' : '#f0c7a7';
-    ctx.fillStyle = skin === 'tooth' ? '#a99b8c' : skin === 'hair' ? '#22232c' : skin === 'pink' ? '#ff70b7' : skin === 'ghost' ? '#a9f4ff' : skin === 'alien' ? '#6fcf58' : skin === 'wizard' ? '#5b3b91' : '#f0c7a7';
-    ctx.beginPath(); ctx.ellipse(x,y+12,15,13,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = skin === 'tooth' ? '#a99b8c' : skin === 'hair' ? '#22232c' : skin === 'pink' ? '#ff70b7' : skin === 'ghost' ? '#a9f4ff' : skin === 'alien' ? '#6fcf58' : skin === 'wizard' ? '#ed171f' : '#f0c7a7';
+    if (skin === 'wizard') {
+      // BİM çalışanı: kırmızı polo tişört, koyu pantolon ve küçük BİM logosu.
+      ctx.fillStyle='#252a35'; ctx.beginPath(); ctx.roundRect(x-10,y+14,20,13,4); ctx.fill();
+      ctx.fillStyle='#ed171f'; ctx.beginPath();
+      ctx.moveTo(x-10,y-1); ctx.lineTo(x-17,y+3); ctx.lineTo(x-21,y+16);
+      ctx.lineTo(x-15,y+19); ctx.lineTo(x-11,y+12); ctx.lineTo(x+11,y+12);
+      ctx.lineTo(x+15,y+19); ctx.lineTo(x+21,y+16); ctx.lineTo(x+17,y+3);
+      ctx.lineTo(x+10,y-1); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
+      ctx.fillStyle='#fff'; ctx.fillRect(x+3,y+3,9,5);
+      ctx.fillStyle='#ed171f'; ctx.font='bold 4px Arial'; ctx.textAlign='center'; ctx.fillText('BİM',x+7.5,y+7);
+    } else {
+      ctx.beginPath(); ctx.ellipse(x,y+12,15,13,0,0,Math.PI*2); ctx.fill();
+    }
     ctx.fillStyle = skinTone; ctx.beginPath(); ctx.arc(x,y-5,17,0,Math.PI*2); ctx.fill();
     ctx.strokeStyle='#101827'; ctx.lineWidth=2.5; ctx.stroke();
 
@@ -448,7 +475,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     } else if (skin === 'alien') {
       ctx.strokeStyle='#75e85e'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x-7,y-19); ctx.lineTo(x-12,y-29); ctx.moveTo(x+7,y-19); ctx.lineTo(x+12,y-29); ctx.stroke(); ctx.fillStyle='#ffef72'; ctx.beginPath(); ctx.arc(x-12,y-30,3,0,Math.PI*2); ctx.arc(x+12,y-30,3,0,Math.PI*2); ctx.fill();
     } else if (skin === 'wizard') {
-      ctx.fillStyle='#4b2c83'; ctx.strokeStyle='#20143b'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x-19,y-17); ctx.lineTo(x+1,y-48); ctx.lineTo(x+19,y-17); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle='#ffd75e'; ctx.beginPath(); ctx.arc(x+1,y-34,3,0,Math.PI*2); ctx.fill();
+      // BİM polo yaka ve düğme detayı.
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x-4,y+1); ctx.lineTo(x,y+6); ctx.lineTo(x+4,y+1); ctx.stroke();
+      ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(x,y+9,1,0,Math.PI*2); ctx.fill();
     }
     // Eyes
     ctx.fillStyle='#fff'; ctx.beginPath(); ctx.ellipse(x-6,y-5,3.2,4.5,0,0,Math.PI*2); ctx.ellipse(x+6,y-5,3.2,4.5,0,0,Math.PI*2); ctx.fill();
