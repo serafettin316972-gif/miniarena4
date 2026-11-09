@@ -104,7 +104,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 </div>
 <main class="app">
   <header>
-    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.19</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
+    <div class="brand"><div class="logo">✦</div><div><h1>MINI ARENA 4</h1><span class="version-tag">v0.20</span><div class="subtitle">4 KİŞİLİK PARTİ OYUNLARI · ONLINE</div></div></div>
     <div class="header-right"><div class="lan-pill"><i class="lan-dot"></i> ONLINE ARENA</div><div class="room-pill"><span>ODA KODU</span><strong id="roomCode">------</strong><button class="copy-btn" id="copyCode" type="button">KOPYALA</button></div></div>
   </header>
   <div class="layout">
@@ -227,7 +227,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
 
   let pollBusy = false, inputBusy = false, lastStateAt = 0, lastPollRequestAt = 0, lastFrameRequestAt = 0, lastRenderAt = 0, lastUiAt = 0, rosterSignature = '', cachedMode = null, toastTimer = null;
   const stateHistory = [];
-  const INTERPOLATION_DELAY = 45; // Ağ paketleri arasındaki küçük gecikmeleri yumuşatır.
+  const INTERPOLATION_DELAY = 100; // 10 Hz durum paketleri arasında hareketi yumuşatır.
   const SNAPSHOT_MS = 1000 / 30, FRAME_MS = 1000 / 60; // 30 Hz sunucu verisi, 60 FPS istemci çizimi
   let snapshotDuration = SNAPSHOT_MS;
   const staticCanvas = document.createElement('canvas'); staticCanvas.width = W; staticCanvas.height = H;
@@ -352,7 +352,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   async function sendInput() {
     if (!token || inputBusy || document.hidden) return;
     const now = Date.now();
-    const requestGap = state?.phase === 'running' ? 33 : 500;
+    // Hareket girdisini oyun durumundan ayır: cevap beklerken ekran güncellemesi durmasın.
+    const requestGap = state?.phase === 'running' ? 50 : 500;
     if (now - lastFrameRequestAt < requestGap) return;
     lastFrameRequestAt = now;
     const x = (keys.has('KeyD') || keys.has('ArrowRight') || mobileDirections.has('right') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') || mobileDirections.has('left') ? 1 : 0);
@@ -360,10 +361,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
     const action = keys.has('Space') || mobileAction;
     input = {x,y,action,skin:selectedSkin}; inputBusy = true;
     try {
-      const s = await api('/api/frame', input);
-      if (token && !s.selfId) { token = null; sessionStorage.removeItem('miniArenaToken'); $('skinScreen').classList.remove('hidden'); $('joinOverlay').classList.add('hidden'); $('leaveButton').classList.add('hidden'); }
-      acceptState(s);
-    } catch { /* the slower state poll reports connection status */ }
+      await api('/api/input', input);
+    } catch { /* durum sorgusu bağlantı hatasını gösterecek */ }
     finally { inputBusy = false; }
   }
   window.addEventListener('keydown', ev => {
@@ -632,8 +631,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:15px;ma
   async function init(){
     if(token)await rejoin();
     await pollState();
-    // Maçta 30 Hz giriş+durum paketi; sunucu simülasyonu da 30 Hz. Çizim requestAnimationFrame ile 60 FPS hedefler.
+    // Girdiler 20 Hz, oyun durumu 10 Hz ayrı taşınır; biri diğerinin cevabını bekletmez.
     setInterval(()=>{if(token)sendInput();else pollState()},16);
+    setInterval(()=>{if(token && !document.hidden)pollState()},100);
     render();
   }
   init();
