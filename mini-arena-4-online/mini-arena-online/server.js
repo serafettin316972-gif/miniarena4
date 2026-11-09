@@ -15,7 +15,7 @@ let ROOM_CODE = null;
 function makeRoomCode() { return Array.from({ length: 6 }, () => CODE_ALPHABET[crypto.randomInt(CODE_ALPHABET.length)]).join(''); }
 const COLORS = ['#42e8d5', '#ffbd4a', '#a98bff', '#ff6c91'];
 const MODES = {
-  tank: { title: 'Tank Savaşı', short: 'TANK', description: 'Tankını sür, siperleri kullan ve rakiplerini vur.', duration: 90, target: 15, action: 'ATEŞ ET', key: 'SPACE', accent: '#ffbd4a' },
+  tank: { title: 'Tank Savaşı', short: 'TANK', description: 'Tankını sür, siperleri kullan ve rakiplerini vur.', duration: 90, target: 18, action: 'ATEŞ ET', key: 'SPACE', accent: '#ffbd4a' },
   sumo: { title: 'Sumo Güreş', short: 'GÜREŞ', description: 'Daralan ringde rakiplerini dışarı gönder. İki hakkın var!', duration: 75, target: 8, action: 'GÜÇLÜ İTİŞ', key: 'SPACE', accent: '#ff6c91' },
   push: { title: 'İtişme Arenası', short: 'İTİŞME', description: 'Küçülen merkez alanını ele geçir, rakiplerini şok dalgasıyla savur.', duration: 60, target: 45, action: 'ŞOK DALGASI', key: 'SPACE', accent: '#42e8d5' },
   soccer: { title: 'Top Kapmaca', short: 'TOP', description: 'Dört küçük kaleden birine daha isabetli şutlar gönder.', duration: 90, target: 8, action: 'ŞUT ÇEK', key: 'SPACE', accent: '#76b8ff' },
@@ -111,7 +111,7 @@ function resetPlayer(p) {
   p.powerUntil = 0; p.controlMs = 0; p.score = 0; p.kos = 0; p.deaths = 0;
   p.input = { x: 0, y: 0, action: false }; p.actionWasDown = false; p.actionReadyAt = 0;
 }
-function cleanSkin(value) { return ['tooth', 'hair', 'pink'].includes(value) ? value : 'tooth'; }
+function cleanSkin(value) { return ['tooth', 'hair', 'pink', 'ghost', 'alien', 'wizard'].includes(value) ? value : 'tooth'; }
 function createPlayer(name, skin) {
   const slot = [0, 1, 2, 3].find(n => ![...players.values()].some(p => p.slot === n));
   if (slot === undefined) return null;
@@ -137,10 +137,10 @@ function resetWorld() {
     if (modeId === 'tank') p.hp = 2;
     if (['sumo', 'survival', 'hotpotato', 'floor'].includes(modeId)) p.lives = 2;
   }
-  if (modeId === 'gems') for (let i = 0; i < 14; i++) gems.push(makeGem());
+  if (modeId === 'gems') for (let i = 0; i < 12; i++) gems.push(makeGem());
   if (modeId === 'survival') {
     for (let i = 0; i < 12; i++) hazards.push(makeHazard(false, 1));
-    survivalStartedAt = now; survivalNextHazardAt = now + 5200; survivalNextLootAt = now + 4200;
+    survivalStartedAt = now; survivalNextHazardAt = now + 4800; survivalNextLootAt = now + 4200;
     survivalHunterSpawned = false; survivalWave = 1;
   }
   if (modeId === 'soccer') ball = { x: WORLD.width / 2, y: WORLD.height / 2, vx: 0, vy: 0, lastKickBy: null, spin: 0 };
@@ -232,12 +232,13 @@ function collidePlayers(pushScale = 1) {
     const nx = dx / d, ny = dy / d, overlap = min - d;
     a.x -= nx * overlap * .5; a.y -= ny * overlap * .5;
     b.x += nx * overlap * .5; b.y += ny * overlap * .5;
-    let strength = (115 + (a.powerUntil > Date.now() ? 250 : 0) + (b.powerUntil > Date.now() ? 250 : 0)) * pushScale;
+    const powerBoost = modeId === 'sumo' ? 2 : 1;
+    let strength = (115 + (a.powerUntil > Date.now() ? 250 * powerBoost : 0) + (b.powerUntil > Date.now() ? 250 * powerBoost : 0)) * pushScale;
     a.vx -= nx * strength * .08; a.vy -= ny * strength * .08;
     b.vx += nx * strength * .08; b.vy += ny * strength * .08;
     const now = Date.now();
-    if (a.powerUntil > now && b.invulnerableUntil < now) { b.vx += nx * 250; b.vy += ny * 250; b.lastHitBy = a.id; }
-    if (b.powerUntil > now && a.invulnerableUntil < now) { a.vx -= nx * 250; a.vy -= ny * 250; a.lastHitBy = b.id; }
+    if (a.powerUntil > now && b.invulnerableUntil < now) { const hit = 250 * powerBoost; b.vx += nx * hit; b.vy += ny * hit; b.lastHitBy = a.id; }
+    if (b.powerUntil > now && a.invulnerableUntil < now) { const hit = 250 * powerBoost; a.vx -= nx * hit; a.vy -= ny * hit; a.lastHitBy = b.id; }
   }
 }
 function dropOut(p, now) {
@@ -251,7 +252,7 @@ function tickTank(dt, now) {
   for (const p of players.values()) {
     movePlayer(p, dt, 205, 12); keepInBounds(p);
     if (actionReady(p, now)) {
-      p.actionReadyAt = now + 570;
+      p.actionReadyAt = now + 520;
       const speed = 570;
       bullets.push({ id: crypto.randomUUID(), owner: p.id, x: p.x + Math.cos(p.angle) * 29, y: p.y + Math.sin(p.angle) * 29, vx: Math.cos(p.angle) * speed, vy: Math.sin(p.angle) * speed, life: 1.45, r: 7 });
     }
@@ -276,7 +277,7 @@ function tickSumo(dt, now) {
   for (const p of players.values()) {
     if (p.lives <= 0) { p.alive = false; continue; }
     movePlayer(p, dt, 190, 9);
-    if (actionReady(p, now)) { p.actionReadyAt = now + 1850; p.powerUntil = now + 380; }
+    if (actionReady(p, now)) { p.actionReadyAt = now + 1750; p.powerUntil = now + 430; }
   }
   collidePlayers(1.25);
   const cx = WORLD.width / 2, cy = WORLD.height / 2, radius = 236;
@@ -285,6 +286,7 @@ function tickSumo(dt, now) {
     const d = Math.hypot(p.x - cx, p.y - cy);
     if (d > radius + 21) dropOut(p, now);
     else {
+      // Soft radial resistance keeps the fight centered without making ring-outs impossible.
       if (d > radius - 25) { const k = (d - (radius - 25)) / 46; p.vx -= ((p.x - cx) / (d || 1)) * 190 * k * dt; p.vy -= ((p.y - cy) / (d || 1)) * 190 * k * dt; }
     }
   }
@@ -298,7 +300,7 @@ function tickPush(dt, now) {
       for (const other of players.values()) {
         if (other.id === p.id || !other.alive) continue;
         const dx = other.x - p.x, dy = other.y - p.y, d = Math.hypot(dx, dy);
-        if (d < 155 && d > 0) { const force = 680 * (1 - d / 155); other.vx += dx / d * force; other.vy += dy / d * force; other.lastHitBy = p.id; }
+        if (d < 165 && d > 0) { const force = 780 * (1 - d / 165); other.vx += dx / d * force; other.vy += dy / d * force; other.lastHitBy = p.id; }
       }
     }
   }
@@ -328,6 +330,7 @@ function tickSoccer(dt, now) {
   const damp = Math.pow(.32, dt); ball.vx *= damp; ball.vy *= damp; ball.spin += dt * 5;
   const goalHalf = 70;
   let scoring = null, conceded = null;
+  // Four goals; shooting into someone else's goal gives the last kicker a point.
   if (ball.x < 15 && Math.abs(ball.y - WORLD.height / 2) < goalHalf) { conceded = 0; scoring = ball.lastKickBy; }
   else if (ball.x > WORLD.width - 15 && Math.abs(ball.y - WORLD.height / 2) < goalHalf) { conceded = 1; scoring = ball.lastKickBy; }
   else if (ball.y < 15 && Math.abs(ball.x - WORLD.width / 2) < goalHalf) { conceded = 2; scoring = ball.lastKickBy; }
@@ -365,14 +368,15 @@ function tickSurvival(dt, now) {
     movePlayer(p, dt, p.powerUntil > now ? 370 : 220, 13); keepInBounds(p);
     if (actionReady(p, now)) {
       p.actionReadyAt = now + 1850; p.powerUntil = now + 430;
+      // The dash itself grants brief protection in tickSurvival without freezing movement.
     }
   }
   if (now >= survivalNextHazardAt && hazards.length < 18) {
     const multiplier = 1 + Math.min(.35, (survivalWave - 1) * .06);
     hazards.push(makeHazard(false, multiplier));
-    survivalNextHazardAt = now + Math.max(3400, 5600 - survivalWave * 180);
+    survivalNextHazardAt = now + Math.max(3200, 5200 - survivalWave * 160);
   }
-  if (!survivalHunterSpawned && now - survivalStartedAt >= 20000) {
+  if (!survivalHunterSpawned && now - survivalStartedAt >= 18000) {
     hazards.push(makeHazard(true, 1)); survivalHunterSpawned = true;
   }
   for (const h of hazards) {
@@ -437,7 +441,7 @@ function tickHotPotato(dt, now) {
   if (!holder || !holder.alive) {
     const alive = [...players.values()].filter(p => p.alive);
     bombHolderId = alive.length ? alive[Math.floor(Math.random() * alive.length)].id : null;
-    bombExplodesAt = now + 6200;
+    bombExplodesAt = now + 5700;
   }
   if (bombHolderId && now >= bombExplodesAt) {
     const victim = players.get(bombHolderId);
@@ -468,7 +472,7 @@ function tickFloor(dt, now) {
     if (actionReady(p, now)) { p.actionReadyAt = now + 1450; p.powerUntil = now + 260; }
     const tile = floorTiles[floorIndexAt(p.x, p.y)];
     if (!tile || !tile.alive) { loseFloorLife(p, now); continue; }
-    if (!tile.crackAt) tile.crackAt = now + 680;
+    if (!tile.crackAt) tile.crackAt = now + 620;
   }
   for (const tile of floorTiles) if (tile.alive && tile.crackAt && now >= tile.crackAt) {
     tile.alive = false;
@@ -666,5 +670,4 @@ function listen(port) {
 }
 listen(START_PORT);
 function shutdown() { server.close(() => process.exit(0)); setTimeout(() => process.exit(1), 1200).unref(); }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
